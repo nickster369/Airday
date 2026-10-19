@@ -129,7 +129,8 @@ nav.tabs button[aria-current="page"]{color:var(--accent-ink);font-weight:600}
 .seg button span{font-weight:500;color:var(--muted)}
 .tile,.gcard .cover{overflow:hidden}
 .tile img,.gcard .cover img{width:100%;height:100%;object-fit:cover;display:block}
-.gcard .cover{height:150px}
+.grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.gcard .cover{height:auto;aspect-ratio:2/3}
 .sync{font-size:12px;color:var(--muted);margin:0 4px 12px}
 .linkbtn{background:none;border:none;padding:0;color:var(--accent-ink);text-decoration:underline;font-size:inherit;font-weight:500;cursor:pointer}
 .note a{color:var(--accent-ink)}
@@ -278,14 +279,14 @@ async function anilist(query, variables){
   if (!j || !j.data) throw new Error('AniList ' + r.status);
   return j.data;
 }
-const A_FIELDS = 'id title{romaji english} episodes status startDate{year month day} nextAiringEpisode{airingAt episode} coverImage{medium} externalLinks{site}';
+const A_FIELDS = 'id title{romaji english} episodes status startDate{year month day} nextAiringEpisode{airingAt episode} coverImage{medium large} externalLinks{site}';
 const SEQUEL_RE = /(season\s*\d|\b\d+(st|nd|rd|th)\s+season|\bpart\s*\d|\bcour\s*\d|\b(ii|iii|iv)\b|\b2nd\b|\b3rd\b)/i;
 function mapAnime(m, cont){
   const t = (m.title.english || m.title.romaji || '').trim();
   const sd = m.startDate && m.startDate.year ? m.startDate.year + '-' + String(m.startDate.month||1).padStart(2,'0') + '-' + String(m.startDate.day||1).padStart(2,'0') : '';
   return { id:m.id, t, alt:m.title.romaji || '', k: cont ? 'Continuing' : (SEQUEL_RE.test(t + ' ' + (m.title.romaji||'')) ? 'Returning' : 'New'),
     eps:m.episodes || null, status:m.status, at: m.nextAiringEpisode ? m.nextAiringEpisode.airingAt * 1000 : null,
-    next: m.nextAiringEpisode ? m.nextAiringEpisode.episode : null, cover: m.coverImage ? m.coverImage.medium : '',
+    next: m.nextAiringEpisode ? m.nextAiringEpisode.episode : null, cover: m.coverImage ? (m.coverImage.large || m.coverImage.medium) : '', thumb: m.coverImage ? m.coverImage.medium : '',
     cr: (m.externalLinks || []).some(l => /crunchyroll/i.test(l.site || '')), start: sd };
 }
 async function fetchAnimeSeason(so, withContinuing){
@@ -300,10 +301,10 @@ async function fetchAnimeSeason(so, withContinuing){
 }
 function ensureAnime(so, force){
   const key = so.season + so.year, e = cache.anime[key];
-  if (ui.busy.anime || coolingDown('anime', force) || (!force && e && Date.now() - e.at < 6 * HOUR)) return;
+  if (ui.busy.anime || coolingDown('anime', force) || (!force && e && e.v === 2 && Date.now() - e.at < 6 * HOUR)) return;
   ui.busy.anime = true; ui.msg.anime = '';
   (async () => {
-    try { cache.anime[key] = { at: Date.now(), items: await fetchAnimeSeason(so, key === CUR.season + CUR.year) }; saveCache(); }
+    try { cache.anime[key] = { v: 2, at: Date.now(), items: await fetchAnimeSeason(so, key === CUR.season + CUR.year) }; saveCache(); }
     catch(err){ ui.failAt.anime = Date.now(); ui.msg.anime = 'Couldn’t reach AniList. ' + (e ? 'Showing the list from ' + ago(e.at) + '.' : 'Check your connection and try again.'); }
     finally { ui.busy.anime = false; if (ui.tab === 'season') render(); }
   })();
@@ -486,6 +487,66 @@ function showInfo(s){
 }
 function sortTime(s){ return s.time || (s.live && s.live.at ? hm(new Date(s.live.at)) : '99'); }
 
+
+/* ---------- Library posters and details ---------- */
+function libSearchTitle(t){
+  const s = searchTitle(t);
+  const parts = s.split(/\s+\/\s+/);
+  return (parts.length > 1 ? parts[parts.length - 1] : s).replace(/[<>~]/g, ' ').trim();
+}
+let enriching = false;
+async function enrichLibrary(){
+  if (enriching) return;
+  enriching = true;
+  let changed = 0;
+  const done = () => { save(); if (ui.tab === 'library') render(); };
+  try {
+    // Anime: AniList, 10 titles per request
+    const anime = state.library.filter(x => typeOf(x) === 'anime' && !x.coverChecked);
+    for (let i = 0; i < anime.length; i += 10){
+      const batch = anime.slice(i, i + 10);
+      const q = 'query{' + batch.map((x, n) => 'm' + n + ':Media(search:' + JSON.stringify(libSearchTitle(x.title)) + ',type:ANIME,sort:SEARCH_MATCH){id episodes startDate{year} coverImage{medium}}').join(' ') + '}';
+      let d;
+      try { d = await anilist(q); } catch(err){ break; }
+      batch.forEach((x, n) => {
+        const m = d['m' + n];
+        if (m){ x.anilistId = m.id; if (m.coverImage) x.cover = m.coverImage.medium; if (!x.season && m.startDate && m.startDate.year) x.season = String(m.startDate.year); }
+        x.coverChecked = true; changed++;
+      });
+      done();
+      await sleep(2500);
+    }
+    // TV: TVmaze
+    for (const x of state.library.filter(y => typeOf(y) === 'tv' && !y.coverChecked)){
+      try {
+        const r = await fetch('https://api.tvmaze.com/singlesearch/shows?q=' + encodeURIComponent(libSearchTitle(x.title)));
+        if (r.ok){ const sh = await r.json(); if (sh.image) x.cover = String(sh.image.medium).replace('http:','https:'); if (!x.season && sh.premiered) x.season = sh.premiered.slice(0,4); x.tvmazeId = sh.id; }
+        if (r.ok || r.status === 404){ x.coverChecked = true; changed++; }
+      } catch(err){ break; }
+      await sleep(600);
+    }
+    if (changed) done();
+    // Movies: TMDB (needs a key)
+    if (settings.tmdbKey){
+      const key = settings.tmdbKey, bearer = key.length > 40;
+      for (const x of state.library.filter(y => typeOf(y) === 'movie' && !y.coverChecked)){
+        try {
+          const t = libSearchTitle(x.title), yr = (t.match(/\b(19|20)\d{2}$/) || [''])[0];
+          const qs = 'query=' + encodeURIComponent(yr ? t.replace(yr, '').trim() : t) + (yr ? '&year=' + yr : '') + '&include_adult=false&language=en-US';
+          const r = await fetch('https://api.themoviedb.org/3/search/movie?' + (bearer ? '' : 'api_key=' + encodeURIComponent(key) + '&') + qs, { headers: bearer ? { Authorization:'Bearer ' + key } : {} });
+          if (r.status === 401) break;
+          if (r.ok){
+            const m = ((await r.json()).results || [])[0];
+            if (m){ if (m.poster_path) x.cover = 'https://image.tmdb.org/t/p/w185' + m.poster_path; if (!x.season && m.release_date) x.season = m.release_date.slice(0,4); x.tmdbId = m.id; }
+            x.coverChecked = true; changed++;
+          }
+        } catch(err){ break; }
+        await sleep(300);
+      }
+      done();
+    }
+  } finally { enriching = false; }
+}
 
 /* ---------- Views ---------- */
 function render(){
@@ -697,7 +758,7 @@ function libraryView(){
   } else {
     h += '<div class="rows">' + items.map(x => {
       const bits = [x.season, x.eps ? x.eps + ' eps' : '', x.status === 'dropped' ? 'Dropped' : ''].filter(Boolean).join(', ');
-      return '<button class="row" data-libedit="' + x.id + '"><span class="tile" style="background:' + tileColor(x.title) + '" aria-hidden="true">' + esc(initials(x.title)) + '</span>' +
+      return '<button class="row" data-libedit="' + x.id + '"><span class="tile" style="background:' + tileColor(x.title) + '" aria-hidden="true">' + (x.cover ? '<img src="' + esc(x.cover) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : esc(initials(x.title))) + '</span>' +
         '<span class="info"><span>' + esc(x.title) + '</span><span class="meta">' + esc(bits || 'No details yet') + '</span></span>' +
         (x.fav ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round" style="color:var(--accent-ink);flex-shrink:0" role="img" aria-label="Favorite"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></svg>' : '') +
         '</button>';
@@ -731,9 +792,10 @@ function libSheet(x, isNewEntry){
       $('#l-save', sheet).addEventListener('click', () => {
         const title = $('#l-title', sheet).value.trim();
         if (!title){ toast('Add a title first'); return; }
+        if (norm(title) !== norm(x.title) || $('#l-type', sheet).value !== typeOf(x)){ x.cover = ''; x.coverChecked = false; }
         Object.assign(x, { title, type: $('#l-type', sheet).value, season: $('#l-season', sheet).value.trim(), eps: parseInt($('#l-eps', sheet).value,10) || null, status: $('#l-status', sheet).value, fav: $('#l-fav', sheet).checked });
         if (isNewEntry) state.library.push(x);
-        save(); closeSheet(); render();
+        save(); closeSheet(); render(); enrichLibrary();
       });
       if (!isNewEntry) $('#l-del', sheet).addEventListener('click', () => {
         if (!confirm('Delete ' + x.title + ' from your library?')) return;
@@ -768,6 +830,7 @@ function importSheet(){
         if (!added && !dup){ toast('Paste at least one row first'); return; }
         ui.lType = typ; ui.lFilter = 'all'; ui.lQ = '';
         save(); closeSheet(); render();
+        enrichLibrary();
         toast('Imported ' + added + (dup ? ', skipped ' + dup + ' already in library' : ''));
       });
     }
@@ -848,7 +911,7 @@ function settingsSheet(){
     '<div class="actions"><button class="btn ghost" data-close="1">Close</button></div>',
     sheet => {
       $('#s-save', sheet).addEventListener('click', () => {
-        settings.tmdbKey = $('#s-tmdb', sheet).value.trim(); saveSettings(); cache.movies = null; saveCache();
+        settings.tmdbKey = $('#s-tmdb', sheet).value.trim(); saveSettings(); cache.movies = null; saveCache(); setTimeout(enrichLibrary, 1500);
         closeSheet(); toast(settings.tmdbKey ? 'Key saved. Movies will load live.' : 'Key removed.');
         if (settings.tmdbKey){ ui.tab = 'season'; ui.sType = 'movie'; ui.sQ = ''; }
         render();
@@ -867,7 +930,7 @@ function settingsSheet(){
           const n = (incoming.shows||[]).length, m = (incoming.library||[]).length;
           if ((state.shows.length || state.library.length) && !confirm('Replace what’s on this device with the backup (' + n + ' shows, ' + m + ' library titles)?')) return;
           state = Object.assign(blank(), incoming); cache.showsAt = 0; save(); saveCache();
-          closeSheet(); render(); toast('Restored ' + n + ' shows and ' + m + ' library titles');
+          closeSheet(); render(); toast('Restored ' + n + ' shows and ' + m + ' library titles'); setTimeout(enrichLibrary, 4000);
           refreshShows(true);
         } catch(err){ toast('That file isn’t an Airday backup.'); }
       });
@@ -946,7 +1009,7 @@ document.addEventListener('click', e => {
     const so = ui.sSeason === 'next' ? NEXT : CUR, entry = cache.anime[so.season + so.year];
     const x = entry && entry.items.find(y => String(y.id) === d.anime); if (!x) return;
     const at = x.at ? new Date(x.at) : null;
-    const s = { id: uid(), type:'anime', title: x.t, anilistId: x.id, linkTitle: x.t, cover: x.cover, day: at ? at.getDay() : dayFromDate(x.start),
+    const s = { id: uid(), type:'anime', title: x.t, anilistId: x.id, linkTitle: x.t, cover: x.thumb || x.cover, day: at ? at.getDay() : dayFromDate(x.start),
       time: at ? hm(at) : '', ep:0, total:null, premiere: x.start, isNew: x.k === 'New', fav:false, epOffset:0,
       live: { total: x.eps, aired: x.next ? x.next - 1 : (x.status === 'FINISHED' ? x.eps : 0), at: x.at, status: x.status } };
     showSheet(s, true);
@@ -989,6 +1052,7 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 
 render();
 refreshShows(false);
+setTimeout(enrichLibrary, 3000);
 })();
 
 </script>
