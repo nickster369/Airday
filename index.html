@@ -173,6 +173,16 @@ a.wlink{color:var(--accent-ink);text-decoration:underline}
 .fres .ttl .wrap{white-space:normal;overflow:visible}
 .fbtns{display:flex;flex-direction:column;gap:6px;align-items:stretch;flex-shrink:0;width:118px}
 .fbtns .meta.ok{text-align:center;padding:8px 0}
+.suggest{display:flex;flex-direction:column;gap:2px;margin-top:6px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:4px}
+.suggest[hidden]{display:none}
+.sug{display:flex;align-items:center;gap:10px;padding:6px 8px;border:none;background:transparent;border-radius:8px;text-align:left;min-height:44px;width:100%;color:inherit}
+.sug:hover,.sug:focus-visible{background:var(--chip)}
+.sug .tile{width:32px;height:46px;font-size:12px;border-radius:6px}
+.sug .info{display:flex;flex-direction:column;min-width:0}
+.sug .info span:first-child{font-weight:600;font-size:14px}
+.sug.none{min-height:40px}
+.linked{font-size:12px;color:var(--accent-ink)}
+.linked:empty{display:none}
 .codebox{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:18px;letter-spacing:.04em;padding:14px;border-radius:12px;background:var(--bg);border:1px solid var(--line);text-align:center;user-select:all;-webkit-user-select:all;word-break:break-all}
 .sync{font-size:12px;color:var(--muted);margin:0 4px 12px}
 .linkbtn{background:none;border:none;padding:0;color:var(--accent-ink);text-decoration:underline;font-size:inherit;font-weight:500;cursor:pointer}
@@ -1151,6 +1161,55 @@ function findSheet(type, ctx){
   );
 }
 
+/* ---------- Title hints while typing ---------- */
+function attachSuggest(sheet, inputSel, getType, onPick){
+  const input = $(inputSel, sheet);
+  if (!input) return;
+  const box = document.createElement('div');
+  box.className = 'suggest'; box.setAttribute('role', 'listbox'); box.setAttribute('aria-label', 'Matching titles'); box.hidden = true;
+  input.after(box);
+  input.setAttribute('autocomplete', 'off'); input.setAttribute('aria-autocomplete', 'list');
+  let timer = null, token = 0, list = [];
+  const close = () => { box.innerHTML = ''; box.hidden = true; };
+  input.addEventListener('input', () => {
+    clearTimeout(timer);
+    const q = input.value.trim();
+    if (q.length < 2){ token++; close(); return; }
+    timer = setTimeout(async () => {
+      const t = ++token;
+      try {
+        const res = await findTitles(getType(), q);
+        if (t !== token) return;
+        list = res.slice(0, 5);
+        if (!list.length){ close(); return; }
+        box.innerHTML = list.map((x, n) => {
+          const meta = [x.year, x.type === 'tv' ? x.where : (x.eps ? x.eps + ' eps' : ''), x.type === 'anime' && x.fmt === 'MOVIE' ? 'Movie' : ''].filter(Boolean).join(', ');
+          return '<button type="button" class="sug" role="option" data-sug="' + n + '">' + tile(x.t, x.cover) + '<span class="info"><span>' + esc(x.t) + '</span><span class="meta">' + esc(meta || ' ') + '</span></span></button>';
+        }).join('') + '<button type="button" class="sug none" data-sug="-1"><span class="meta">None of these. Keep what I typed.</span></button>';
+        box.hidden = false;
+      } catch(e){ close(); }
+    }, 350);
+  });
+  input.addEventListener('keydown', e => { if (e.key === 'Escape' && !box.hidden){ e.stopPropagation(); close(); } });
+  box.addEventListener('click', ev => {
+    const b = ev.target.closest('[data-sug]'); if (!b) return;
+    ev.stopPropagation();
+    const n = Number(b.dataset.sug);
+    if (n >= 0){ const x = list[n]; input.value = x.t; onPick(x); } else onPick(null);
+    token++; close(); input.focus();
+  });
+}
+function linkedNote(sheet, id, x){
+  const el = $('#' + id, sheet); if (!el) return;
+  el.textContent = x ? 'Matched to ' + x.t + (x.year ? ' (' + x.year + ')' : '') + '. Poster and details will come from it.' : '';
+}
+function applyPick(target, x){
+  target.cover = x.cover || ''; target.coverChecked = true;
+  if (x.genres && x.genres.length) target.genres = x.genres;
+  target.anilistId = null; target.tvmazeId = null; target.tmdbId = null;
+  if (x.type === 'anime') target.anilistId = x.id; else if (x.type === 'tv') target.tvmazeId = x.id; else target.tmdbId = x.id;
+}
+
 /* ---------- Views ---------- */
 function render(){
   document.querySelectorAll('nav.tabs button').forEach(b => {
@@ -1394,7 +1453,7 @@ function closeSheet(){ $('#modal').innerHTML = ''; }
 function libSheet(x, isNewEntry){
   openSheet(
     '<h2>' + (isNewEntry ? 'Add to library' : 'Edit entry') + '</h2>' +
-    '<div class="field"><label for="l-title">Title</label><input id="l-title" value="' + esc(x.title) + '"></div>' +
+    '<div class="field"><label for="l-title">Title</label><input id="l-title" value="' + esc(x.title) + '"><span class="linked" id="l-linked"></span></div>' +
     '<div class="field"><label for="l-type">Type</label><select id="l-type">' + typeOptions(typeOf(x)) + '</select></div>' +
     '<div class="two"><div class="field"><label for="l-season">Season</label><input id="l-season" placeholder="e.g. Fall 2026" value="' + esc(x.season||'') + '"></div>' +
     '<div class="field"><label for="l-eps">Episodes</label><input id="l-eps" type="number" inputmode="numeric" min="0" value="' + (x.eps||'') + '"></div></div>' +
@@ -1405,13 +1464,19 @@ function libSheet(x, isNewEntry){
     '<div class="actions"><button class="btn ghost" data-close="1">Cancel</button><button class="btn" id="l-save">' + (isNewEntry ? 'Add' : 'Save changes') + '</button></div>' +
     (isNewEntry ? '' : '<div class="actions"><button class="btn danger" id="l-del">Delete from library</button></div>'),
     sheet => {
-      let rv = Number(x.rating) || 0;
+      let rv = Number(x.rating) || 0, picked = null;
       bindStars(sheet, v => v === undefined ? rv : (rv = v));
+      attachSuggest(sheet, '#l-title', () => $('#l-type', sheet).value, p => {
+        picked = p; linkedNote(sheet, 'l-linked', p);
+        if (p){ if (!$('#l-season', sheet).value && p.year) $('#l-season', sheet).value = p.year; if (!$('#l-eps', sheet).value && p.eps) $('#l-eps', sheet).value = p.eps; }
+      });
+      $('#l-type', sheet).addEventListener('change', () => { picked = null; linkedNote(sheet, 'l-linked', null); });
       $('#l-save', sheet).addEventListener('click', () => {
         const title = $('#l-title', sheet).value.trim();
         if (!title){ toast('Add a title first'); return; }
         if (norm(title) !== norm(x.title) || $('#l-type', sheet).value !== typeOf(x)){ x.cover = ''; x.coverChecked = false; }
         Object.assign(x, { title, type: $('#l-type', sheet).value, season: $('#l-season', sheet).value.trim(), eps: parseInt($('#l-eps', sheet).value,10) || null, status: $('#l-status', sheet).value, fav: $('#l-fav', sheet).checked, rating: rv || null, note: $('#l-note', sheet).value.trim() });
+        if (picked && norm(picked.t) === norm(title) && picked.type === x.type) applyPick(x, picked);
         if (isNewEntry) state.library.push(x);
         save(); closeSheet(); render(); enrichLibrary();
       });
@@ -1465,7 +1530,7 @@ function showSheet(s, isNewEntry){
   openSheet(
     '<h2>' + (isNewEntry ? 'Add to my week' : 'Edit show') + '</h2>' + linkLine +
     (isNewEntry ? '' : '<a class="btn ghost" href="' + esc(watchLink(s, typeOf(s))) + '" target="_blank" rel="noopener">' + watchLabel(typeOf(s)) + '</a>') +
-    '<div class="field"><label for="f-title">Title</label><input id="f-title" value="' + esc(s.title) + '" required></div>' +
+    '<div class="field"><label for="f-title">Title</label><input id="f-title" value="' + esc(s.title) + '" required><span class="linked" id="f-linked"></span></div>' +
     '<div class="two"><div class="field"><label for="f-day">Day</label><select id="f-day">' + dayOpts + '</select></div>' +
     '<div class="field"><label for="f-time">Time</label><input id="f-time" type="time" value="' + esc(s.time||'') + '"></div></div>' +
     '<div class="two"><div class="field"><label for="f-ep">Next episode</label><input id="f-ep" type="number" inputmode="numeric" min="1" value="' + ((Number(s.ep)||0) + 1) + '"></div>' +
@@ -1478,6 +1543,11 @@ function showSheet(s, isNewEntry){
     '<div class="actions"><button class="btn ghost" data-close="1">Cancel</button><button class="btn" id="f-save">' + (isNewEntry ? 'Add show' : 'Save changes') + '</button></div>' +
     (isNewEntry ? '' : '<div class="actions"><button class="btn ghost" id="f-finish">Move to library</button><button class="btn danger" id="f-del">Remove</button></div>'),
     sheet => {
+      let picked = null;
+      attachSuggest(sheet, '#f-title', () => typeOf(s), p => {
+        picked = p; linkedNote(sheet, 'f-linked', p);
+        if (p && p.next){ const at = new Date(p.next.airingAt * 1000); if ($('#f-day', sheet).value === '') $('#f-day', sheet).value = at.getDay(); if (!$('#f-time', sheet).value) $('#f-time', sheet).value = hm(at); }
+      });
       $('#f-prem', sheet).addEventListener('change', e => { const d = dayFromDate(e.target.value); if (d != null && $('#f-day', sheet).value === '') $('#f-day', sheet).value = d; });
       $('#f-save', sheet).addEventListener('click', () => {
         const title = $('#f-title', sheet).value.trim();
@@ -1492,10 +1562,17 @@ function showSheet(s, isNewEntry){
         if (!autoTotal) s.total = parseInt($('#f-total', sheet).value,10) || null;
         const offEl = $('#f-off', sheet); if (offEl) s.epOffset = Math.max(0, parseInt(offEl.value,10) || 0);
         if (renamed){ s.anilistId = null; s.tvmazeId = null; s.live = null; s.linkTitle = ''; s.noLink = false; s.epOffset = null; s.cover = ''; }
+        const usePick = picked && norm(picked.t) === norm(title) && picked.type === typeOf(s);
+        if (usePick){
+          applyPick(s, picked); s.linkTitle = picked.t; s.noLink = false; s.epOffset = null; s.live = null;
+          s.backlog = picked.status === 'FINISHED';
+          if (picked.type === 'anime'){ const n = picked.next; s.live = { total: picked.eps, aired: n ? n.episode - 1 : (picked.status === 'FINISHED' ? picked.eps : 0), at: n ? n.airingAt * 1000 : null, status: picked.status }; }
+          delete s.tmdbId;
+        }
         if (isNewEntry){ state.shows.push(s); if (s.day != null) ui.day = s.day; }
         save(); closeSheet(); render();
         if (isNewEntry) toast('Added ' + title);
-        if (isNewEntry || renamed) refreshShows(true);
+        if (isNewEntry || renamed || usePick) refreshShows(true);
       });
       const un = $('#f-unlink', sheet);
       if (un) un.addEventListener('click', () => {
@@ -1559,15 +1636,18 @@ function settingsSheet(){
 function movieSheet(){
   openSheet(
     '<h2>Add a movie</h2>' +
-    '<div class="field"><label for="m-title">Title</label><input id="m-title"></div>' +
+    '<div class="field"><label for="m-title">Title</label><input id="m-title"><span class="linked" id="m-linked"></span></div>' +
     '<div class="two"><div class="field"><label for="m-date">Release date</label><input id="m-date" type="date"></div>' +
     '<div class="field"><label for="m-where">Where</label><input id="m-where" placeholder="Theaters, Netflix…"></div></div>' +
     '<div class="actions"><button class="btn ghost" data-close="1">Cancel</button><button class="btn" id="m-save">Add to list</button></div>',
     sheet => {
+      let picked = null;
+      attachSuggest(sheet, '#m-title', () => 'movie', p => { picked = p; linkedNote(sheet, 'm-linked', p); if (p && p.date) $('#m-date', sheet).value = p.date; });
       $('#m-save', sheet).addEventListener('click', () => {
         const title = $('#m-title', sheet).value.trim();
         if (!title){ $('#m-title', sheet).focus(); toast('Add a title first'); return; }
-        state.watchlist.push({ id: uid(), title, date: $('#m-date', sheet).value, where: $('#m-where', sheet).value.trim() });
+        const usePick = picked && norm(picked.t) === norm(title);
+        state.watchlist.push({ id: uid(), title, date: $('#m-date', sheet).value, where: $('#m-where', sheet).value.trim(), cover: usePick ? (picked.cover || '') : '' });
         save(); closeSheet(); render(); toast('Added ' + title + ' to your list');
       });
     }
