@@ -1,0 +1,996 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Airday">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#12131A">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<title>Airday</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#F4F5F8; --surface:#FFFFFF; --chip:#E7E9F0; --line:#DDE0E8; --track:#E1E3EA;
+  --text:#15161D; --muted:#5A5E6E; --accent:#FF9A52; --on-accent:#12131A; --accent-ink:#A84B0B;
+  --new-bg:#DCE6FF; --new-ink:#24407F; --danger:#B3261E; --scrim:rgba(10,11,16,.55);
+  color-scheme: light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#12131A; --surface:#1C1E28; --chip:#1F2230; --line:#262938; --track:#2A2D3B;
+    --text:#F2F2F5; --muted:#A3A7B7; --accent:#FF9A52; --on-accent:#12131A; --accent-ink:#FF9A52;
+    --new-bg:#2C3A5C; --new-ink:#B9CCFF; --danger:#FF8A80; --scrim:rgba(0,0,0,.6);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#12131A; --surface:#1C1E28; --chip:#1F2230; --line:#262938; --track:#2A2D3B;
+  --text:#F2F2F5; --muted:#A3A7B7; --accent:#FF9A52; --on-accent:#12131A; --accent-ink:#FF9A52;
+  --new-bg:#2C3A5C; --new-ink:#B9CCFF; --danger:#FF8A80; --scrim:rgba(0,0,0,.6);
+  color-scheme: dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px);background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:15px;line-height:1.4;-webkit-tap-highlight-color:transparent}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:560px;margin:0 auto;padding:0 16px calc(96px + env(safe-area-inset-bottom,0px))}
+.top{padding:24px 4px 12px;display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+.sub{font-size:13px;color:var(--muted);font-weight:500}
+h1{margin:2px 0 0;font-family:'Space Grotesk',system-ui,sans-serif;font-size:30px;font-weight:700;letter-spacing:-.01em}
+h2{margin:0;font-family:'Space Grotesk',system-ui,sans-serif;font-size:18px;font-weight:700}
+.iconbtn{width:44px;height:44px;border-radius:22px;border:none;background:var(--chip);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin:4px 0 18px}
+.day{height:64px;border-radius:14px;border:none;background:var(--chip);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;position:relative}
+.day .l{font-size:12px;color:var(--muted);font-weight:500}
+.day .n{font-size:18px;font-weight:600}
+.day.on{background:var(--accent);color:var(--on-accent)}
+.day.on .l{color:var(--on-accent);font-weight:600}
+.day.today::after{content:"";position:absolute;bottom:7px;width:4px;height:4px;border-radius:2px;background:currentColor}
+.sechead{display:flex;justify-content:space-between;align-items:baseline;padding:0 4px 10px}
+.list{display:flex;flex-direction:column;gap:10px}
+.card{background:var(--surface);border-radius:16px;padding:12px;display:flex;gap:12px;align-items:center}
+.tile{width:54px;height:76px;border-radius:10px;color:#12131A;font-family:'Space Grotesk',system-ui,sans-serif;font-weight:700;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cardmain{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;background:none;border:none;padding:0;text-align:left}
+.ttl{font-weight:600;font-size:15px;display:flex;gap:6px;align-items:center;min-width:0}
+.ttl span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tag{font-size:10px;font-weight:600;padding:2px 6px;border-radius:6px;background:var(--new-bg);color:var(--new-ink);flex-shrink:0}
+.meta{font-size:12px;color:var(--muted)}
+.meta b{color:var(--accent-ink);font-weight:600}
+.bar{height:5px;border-radius:3px;background:var(--track);overflow:hidden}
+.bar i{display:block;height:5px;background:var(--accent);border-radius:3px}
+.side{display:flex;flex-direction:column;gap:6px}
+.sbtn{width:44px;height:38px;border:none;border-radius:10px;background:var(--chip);font-weight:600;font-size:13px;display:flex;align-items:center;justify-content:center}
+.star{background:transparent;color:var(--muted)}
+.star.on{color:var(--accent-ink)}
+.done{width:auto;padding:0 10px;background:var(--accent);color:var(--on-accent);font-size:12px}
+.empty{background:var(--surface);border-radius:16px;padding:22px 18px;color:var(--muted);text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center}
+.btn{min-height:44px;padding:0 16px;border-radius:12px;border:none;background:var(--accent);color:var(--on-accent);font-weight:600;font-size:14px}
+.btn.ghost{background:var(--chip);color:var(--text)}
+.btn.danger{background:transparent;color:var(--danger);border:1px solid var(--line)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 12px}
+.chipb{min-height:36px;padding:0 14px;border-radius:18px;border:none;background:var(--chip);font-weight:500;font-size:13px}
+.chipb.on{background:var(--accent);color:var(--on-accent);font-weight:600}
+.search{width:100%;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);padding:0 14px;font-size:15px;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.gcard{background:var(--surface);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+.gcard .cover{height:118px;display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',system-ui,sans-serif;font-weight:700;font-size:28px;color:#12131A}
+.gcard .body{padding:10px;display:flex;flex-direction:column;gap:3px;flex:1}
+.gcard .name{font-weight:600;font-size:14px;line-height:1.25}
+.gcard .btn{margin-top:auto;min-height:40px;font-size:13px}
+.gcard .spacer{flex:1;min-height:8px}
+.added{background:transparent;color:var(--accent-ink);border:1px solid var(--accent-ink)}
+.note{font-size:12px;color:var(--muted);margin:14px 4px 0}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:4px 0 14px}
+.stat{background:var(--surface);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:2px}
+.stat .v{font-family:'Space Grotesk',system-ui,sans-serif;font-size:22px;font-weight:700}
+.stat .k{font-size:12px;color:var(--muted)}
+.rows{display:flex;flex-direction:column}
+.row{display:flex;align-items:center;gap:12px;padding:10px 4px;border:none;border-bottom:1px solid var(--line);background:none;text-align:left;width:100%}
+.row .tile{width:40px;height:54px;font-size:15px;border-radius:8px}
+.row .info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.row .info span:first-child{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);padding:8px 12px calc(10px + env(safe-area-inset-bottom,0px))}
+nav.tabs .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+nav.tabs button{min-height:48px;border:none;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:500;color:var(--muted)}
+nav.tabs button[aria-current="page"]{color:var(--accent-ink);font-weight:600}
+.scrim{position:fixed;inset:0;background:var(--scrim);z-index:30;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:20px 20px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:13px;color:var(--muted);font-weight:500}
+.field input,.field select,.field textarea{min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--bg);padding:8px 12px;font-size:16px;width:100%}
+.field textarea{min-height:160px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.check{display:flex;gap:10px;align-items:center;min-height:44px}
+.check input{width:22px;height:22px;accent-color:var(--accent)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.actions .btn{flex:1}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--text);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;z-index:40;max-width:90vw}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion: no-preference){
+  .sheet{animation:up .18s ease-out}
+  @keyframes up{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
+}
+.tag.tv{background:var(--chip);color:var(--muted)}
+.seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;border-radius:12px;background:var(--chip);margin:4px 0 14px}
+.seg button{min-height:40px;border:none;border-radius:9px;background:transparent;font-size:14px;font-weight:500;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--text);font-weight:600}
+.seg button span{font-weight:500;color:var(--muted)}
+.tile,.gcard .cover{overflow:hidden}
+.tile img,.gcard .cover img{width:100%;height:100%;object-fit:cover;display:block}
+.gcard .cover{height:150px}
+.sync{font-size:12px;color:var(--muted);margin:0 4px 12px}
+.linkbtn{background:none;border:none;padding:0;color:var(--accent-ink);text-decoration:underline;font-size:inherit;font-weight:500;cursor:pointer}
+.note a{color:var(--accent-ink)}
+.empty .actions .btn{flex:1}
+.sheet h2+.meta{margin-top:-4px}
+</style>
+</head>
+<body>
+<main class="wrap" id="view" aria-live="polite"></main>
+<nav class="tabs" aria-label="Main">
+  <div class="in">
+    <button data-tab="week"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Week</button>
+    <button data-tab="season"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Season</button>
+    <button data-tab="library"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h4v16H4zM10 4h4v16h-4zM16 5l4 1-3 14-4-1z"/></svg>Library</button>
+  </div>
+</nav>
+<div id="modal"></div>
+<div id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- Storage ---------- */
+const LS_KEY = 'animeWeek.v1', CACHE_KEY = 'animeWeek.cache.v1', SET_KEY = 'animeWeek.settings.v1';
+function readLS(k){ try { const r = localStorage.getItem(k); return r ? JSON.parse(r) : null; } catch(e){ return null; } }
+function writeLS(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch(e){ return false; } }
+function blank(){ return { v:2, updatedAt:0, shows:[], library:[], watchlist:[] }; }
+let state = Object.assign(blank(), readLS(LS_KEY) || {});
+let settings = Object.assign({ tmdbKey:'' }, readLS(SET_KEY) || {});
+let cache = Object.assign({ anime:{}, tv:null, movies:null, showsAt:0 }, readLS(CACHE_KEY) || {});
+function save(){ state.updatedAt = Date.now(); if (!writeLS(LS_KEY, state)) toast('Couldn’t save on this device. Download a backup from Settings.'); }
+function saveCache(){ writeLS(CACHE_KEY, cache); }
+function saveSettings(){ writeLS(SET_KEY, settings); }
+try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch(e){}
+
+/* ---------- Constants ---------- */
+const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const DAYS_FULL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const TILES = ['#7FB2FF','#F2C14E','#9BD8B4','#E7A3C8','#C9B6FF','#8FD3E8','#FFB38A'];
+const TYPES = { anime:'Anime', tv:'TV', movie:'Movies' };
+const TYPE_ONE = { anime:'Anime', tv:'TV show', movie:'Movie' };
+const HOUR = 3600000, DAY_MS = 86400000;
+
+/* Saved lists, used only until live data loads (or if a source is unreachable). */
+const TV_FALLBACK = [
+  {t:'Dexter: Resurrection Season 2', k:'Returning', p:'2026-10-30', w:'Paramount+'},
+  {t:'Nocturne', k:'New', p:'2026-10-30', w:'Apple TV'},
+  {t:'The Gilded Age Season 4', k:'Returning', p:'2026-11-01', w:'HBO'},
+  {t:'Stick Season 2', k:'Returning', p:'2026-11-04', w:'Apple TV'},
+  {t:'Black Doves Season 2', k:'Returning', p:'2026-11-05', w:'Netflix', full:1},
+  {t:'The Institute Season 2', k:'Returning', p:'2026-11-08', w:'MGM+'},
+  {t:'The Lord of the Rings: The Rings of Power Season 3', k:'Returning', p:'2026-11-11', w:'Prime Video'},
+  {t:'Percy Jackson and the Olympians Season 3', k:'Returning', p:'2026-11-20', w:'Disney+'},
+  {t:'Yellowjackets Season 4', k:'Returning', p:'2026-11-20', w:'Paramount+'},
+  {t:'Blade Runner 2099', k:'New', p:'2026-11-25', w:'Prime Video', full:1},
+  {t:'Harry Potter', k:'New', p:'2026-12-25', w:'HBO'},
+  {t:'Ahsoka Season 2', k:'Returning', p:'2027-01-20', w:'Disney+'}
+];
+const MOVIES_FALLBACK = [
+  {t:'Clayface', d:'2026-10-23', w:'Theaters'},
+  {t:'Godzilla Minus Zero', d:'2026-11-03', w:'Theaters'},
+  {t:'The Cat in the Hat', d:'2026-11-06', w:'Theaters'},
+  {t:'The Hunger Games: Sunrise on the Reaping', d:'2026-11-20', w:'Theaters'},
+  {t:'Violent Night 2', d:'2026-12-04', w:'Theaters'},
+  {t:'Jumanji 3', d:'2026-12-11', w:'Theaters'},
+  {t:'Avengers: Doomsday', d:'2026-12-18', w:'Theaters'},
+  {t:'Dune: Part Three', d:'2026-12-18', w:'Theaters'},
+  {t:'Werwulf', d:'2026-12-25', w:'Theaters'}
+];
+
+/* ---------- Helpers ---------- */
+const $ = (s, el=document) => el.querySelector(s);
+function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function norm(s){ return String(s||'').replace(/[’‘]/g,"'").trim().toLowerCase(); }
+function typeOf(x){ return x.type || 'anime'; }
+function typeOptions(sel){ return Object.keys(TYPES).map(k => '<option value="' + k + '"' + (k === sel ? ' selected' : '') + '>' + TYPE_ONE[k] + '</option>').join(''); }
+function tileColor(t){ let h=0; for (const c of String(t)) h = (h*31 + c.charCodeAt(0)) >>> 0; return TILES[h % TILES.length]; }
+function initials(t){
+  const w = String(t).replace(/[^A-Za-z0-9 ]/g,' ').split(/\s+/).filter(x => x && !/^(the|a|an|of|and|season|s\d+|\d+)$/i.test(x));
+  return ((w[0]||t||'?')[0] + (w[1] ? w[1][0] : '')).toUpperCase();
+}
+function tile(title, cover, extra){
+  return '<div class="tile' + (extra ? ' ' + extra : '') + '" style="background:' + tileColor(title) + '" aria-hidden="true">' +
+    (cover ? '<img src="' + esc(cover) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : esc(initials(title))) + '</div>';
+}
+function today(){ const d = new Date(); d.setHours(0,0,0,0); return d; }
+function ymd(d){ return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+function parseDate(s){ if (!s) return null; const [y,m,d] = String(s).split('-').map(Number); if (!y) return null; return new Date(y, (m||1)-1, d||1); }
+function fmtDate(d){ return MONTHS[d.getMonth()] + ' ' + d.getDate(); }
+function hm(d){ return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); }
+function fmtTime(t){
+  if (!t) return '';
+  const [h,m] = t.split(':').map(Number);
+  return (((h + 11) % 12) + 1) + ':' + String(m).padStart(2,'0') + ' ' + (h >= 12 ? 'PM' : 'AM');
+}
+function fmtAir(ms){
+  const d = new Date(ms), dd = new Date(ms); dd.setHours(0,0,0,0);
+  const diff = Math.round((dd - today()) / DAY_MS), time = fmtTime(hm(d));
+  if (diff === 0) return 'today ' + time;
+  if (diff === 1) return 'tomorrow ' + time;
+  if (diff > 1 && diff < 7) return DAYS[d.getDay()] + ' ' + time;
+  return fmtDate(d) + ', ' + time;
+}
+function dayFromDate(s){ const d = parseDate(s); return d ? d.getDay() : null; }
+function ago(ms){
+  const m = Math.round((Date.now() - ms) / 60000);
+  if (m < 1) return 'just now'; if (m < 60) return m + ' min ago';
+  const h = Math.round(m / 60); if (h < 24) return h + ' hr ago';
+  return Math.round(h / 24) + ' days ago';
+}
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+function toast(msg){
+  const el = $('#toast');
+  el.innerHTML = '<div class="toast" role="status">' + esc(msg) + '</div>';
+  clearTimeout(toast.t); toast.t = setTimeout(() => el.innerHTML = '', 2800);
+}
+function whenText(ds){
+  const d = parseDate(ds); if (!d) return 'Date not set';
+  const days = Math.round((d - today()) / DAY_MS);
+  if (days === 0) return 'Out today';
+  if (days < 0) return 'Out since ' + fmtDate(d);
+  if (days === 1) return 'Out tomorrow';
+  if (days < 7) return 'Out ' + DAYS_FULL[d.getDay()] + ', ' + fmtDate(d);
+  return fmtDate(d) + ', in ' + days + ' days';
+}
+
+/* ---------- Seasons ---------- */
+const ORDER = ['WINTER','SPRING','SUMMER','FALL'];
+function seasonOf(d){ return { season: ORDER[Math.floor(d.getMonth() / 3)], year: d.getFullYear() }; }
+function nextSeason(o){ const i = ORDER.indexOf(o.season); return i === 3 ? { season:'WINTER', year:o.year + 1 } : { season:ORDER[i+1], year:o.year }; }
+function seasonLabel(o){ return o.season[0] + o.season.slice(1).toLowerCase() + ' ' + o.year; }
+function seasonStartInt(o){ return Number(o.year + ['01','04','07','10'][ORDER.indexOf(o.season)] + '01'); }
+const CUR = seasonOf(new Date()), NEXT = nextSeason(CUR);
+
+const ui = { tab:'week', day:new Date().getDay(), sType:'anime', sSeason:'cur', sFilter:'all', crOnly:true, mFilter:'all', sQ:'',
+  lFilter:'all', lQ:'', lType:'anime', busy:{}, msg:{}, failAt:{} };
+function coolingDown(kind, force){ return !force && ui.failAt[kind] && Date.now() - ui.failAt[kind] < 2 * 60000; }
+
+/* ---------- AniList (anime) ---------- */
+async function anilist(query, variables){
+  const r = await fetch('https://graphql.anilist.co', { method:'POST', headers:{ 'Content-Type':'application/json', 'Accept':'application/json' }, body: JSON.stringify({ query, variables: variables || {} }) });
+  const j = await r.json().catch(() => null);
+  if (!j || !j.data) throw new Error('AniList ' + r.status);
+  return j.data;
+}
+const A_FIELDS = 'id title{romaji english} episodes status startDate{year month day} nextAiringEpisode{airingAt episode} coverImage{medium} externalLinks{site}';
+const SEQUEL_RE = /(season\s*\d|\b\d+(st|nd|rd|th)\s+season|\bpart\s*\d|\bcour\s*\d|\b(ii|iii|iv)\b|\b2nd\b|\b3rd\b)/i;
+function mapAnime(m, cont){
+  const t = (m.title.english || m.title.romaji || '').trim();
+  const sd = m.startDate && m.startDate.year ? m.startDate.year + '-' + String(m.startDate.month||1).padStart(2,'0') + '-' + String(m.startDate.day||1).padStart(2,'0') : '';
+  return { id:m.id, t, alt:m.title.romaji || '', k: cont ? 'Continuing' : (SEQUEL_RE.test(t + ' ' + (m.title.romaji||'')) ? 'Returning' : 'New'),
+    eps:m.episodes || null, status:m.status, at: m.nextAiringEpisode ? m.nextAiringEpisode.airingAt * 1000 : null,
+    next: m.nextAiringEpisode ? m.nextAiringEpisode.episode : null, cover: m.coverImage ? m.coverImage.medium : '',
+    cr: (m.externalLinks || []).some(l => /crunchyroll/i.test(l.site || '')), start: sd };
+}
+async function fetchAnimeSeason(so, withContinuing){
+  const list = 'type:ANIME,isAdult:false,format_in:[TV,TV_SHORT,ONA],sort:POPULARITY_DESC';
+  const q = p => 'query($s:MediaSeason,$y:Int){Page(page:' + p + ',perPage:50){media(season:$s,seasonYear:$y,' + list + '){' + A_FIELDS + '}}}';
+  const jobs = [anilist(q(1), { s:so.season, y:so.year }), anilist(q(2), { s:so.season, y:so.year })];
+  if (withContinuing) jobs.push(anilist('query($d:FuzzyDateInt){Page(page:1,perPage:50){media(status:RELEASING,startDate_lesser:$d,' + list + '){' + A_FIELDS + '}}}', { d: seasonStartInt(so) }));
+  const res = await Promise.all(jobs);
+  const seen = new Map();
+  res.forEach((d, i) => (d.Page.media || []).forEach(m => { if (!seen.has(m.id)) seen.set(m.id, mapAnime(m, i === 2)); }));
+  return [...seen.values()];
+}
+function ensureAnime(so, force){
+  const key = so.season + so.year, e = cache.anime[key];
+  if (ui.busy.anime || coolingDown('anime', force) || (!force && e && Date.now() - e.at < 6 * HOUR)) return;
+  ui.busy.anime = true; ui.msg.anime = '';
+  (async () => {
+    try { cache.anime[key] = { at: Date.now(), items: await fetchAnimeSeason(so, key === CUR.season + CUR.year) }; saveCache(); }
+    catch(err){ ui.failAt.anime = Date.now(); ui.msg.anime = 'Couldn’t reach AniList. ' + (e ? 'Showing the list from ' + ago(e.at) + '.' : 'Check your connection and try again.'); }
+    finally { ui.busy.anime = false; if (ui.tab === 'season') render(); }
+  })();
+}
+
+/* ---------- TVmaze (TV) ---------- */
+async function fetchTVLineup(onProgress){
+  const dates = []; for (let i = -7; i <= 21; i++){ const d = today(); d.setDate(d.getDate() + i); dates.push(ymd(d)); }
+  const urls = []; dates.forEach(d => { urls.push('https://api.tvmaze.com/schedule/web?date=' + d); urls.push('https://api.tvmaze.com/schedule?country=US&date=' + d); });
+  const found = new Map(), perDay = {}; let ok = 0;
+  for (let i = 0; i < urls.length; i++){
+    try {
+      let r = await fetch(urls[i]);
+      if (r.status === 429){ await sleep(6000); r = await fetch(urls[i]); }
+      if (r.ok){
+        ok++;
+        for (const e of await r.json()){
+          const show = e.show || (e._embedded && e._embedded.show);
+          if (!show || e.season == null) continue;
+          const dk = show.id + ':' + e.season + ':' + e.airdate; perDay[dk] = (perDay[dk] || 0) + 1;
+          if (e.number !== 1) continue;
+          if (show.language && show.language !== 'English') continue;
+          if (!['Scripted','Animation'].includes(show.type)) continue;
+          const key = show.id + ':' + e.season;
+          if (found.has(key)) continue;
+          found.set(key, { id: show.id, t: e.season > 1 ? show.name + ' Season ' + e.season : show.name, k: e.season > 1 ? 'Returning' : 'New', p: e.airdate,
+            w: (show.webChannel && show.webChannel.name) || (show.network && show.network.name) || '', cover: show.image ? String(show.image.medium).replace('http:','https:') : '', season: e.season });
+        }
+      }
+    } catch(err){}
+    if (onProgress) onProgress(i + 1, urls.length);
+    await sleep(550);
+  }
+  if (!ok) throw new Error('TVmaze unreachable');
+  return [...found.values()].map(x => Object.assign(x, { full: (perDay[x.id + ':' + x.season + ':' + x.p] || 0) > 2 ? 1 : 0 })).sort((a,b) => a.p.localeCompare(b.p));
+}
+function ensureTV(force){
+  const e = cache.tv;
+  if (ui.busy.tv || coolingDown('tv', force) || (!force && e && Date.now() - e.at < 24 * HOUR)) return;
+  ui.busy.tv = true; ui.msg.tv = '';
+  (async () => {
+    try { cache.tv = { at: Date.now(), items: await fetchTVLineup((n, total) => { ui.msg.tvProgress = n + ' of ' + total; if (ui.tab === 'season' && ui.sType === 'tv' && n % 6 === 0) render(); }) }; saveCache(); }
+    catch(err){ ui.failAt.tv = Date.now(); ui.msg.tv = 'Couldn’t reach TVmaze. ' + (e ? 'Showing the list from ' + ago(e.at) + '.' : 'Showing a saved list for now.'); }
+    finally { ui.busy.tv = false; ui.msg.tvProgress = ''; if (ui.tab === 'season') render(); }
+  })();
+}
+async function tvShowData(s){
+  const name = s.title.replace(/\s+season\s+\d+\s*$/i, '').trim();
+  const url = s.tvmazeId ? 'https://api.tvmaze.com/shows/' + s.tvmazeId + '?embed=episodes' : 'https://api.tvmaze.com/singlesearch/shows?q=' + encodeURIComponent(name) + '&embed=episodes';
+  const r = await fetch(url);
+  if (r.status === 404) return null;
+  if (!r.ok) throw new Error('TVmaze ' + r.status);
+  return r.json();
+}
+function applyTV(s, show){
+  s.tvmazeId = show.id; s.linkTitle = show.name;
+  if (!s.cover && show.image) s.cover = String(show.image.medium).replace('http:','https:');
+  const eps = ((show._embedded && show._embedded.episodes) || []).filter(e => e.number != null);
+  const m = s.title.match(/season\s+(\d+)\s*$/i);
+  const season = m ? Number(m[1]) : Math.max(0, ...eps.map(e => e.season));
+  const inSeason = eps.filter(e => e.season === season), now = Date.now();
+  const next = inSeason.find(e => e.airstamp && Date.parse(e.airstamp) > now);
+  applyLive(s, { total: inSeason.length || null, aired: inSeason.filter(e => e.airstamp && Date.parse(e.airstamp) <= now).length,
+    at: next ? Date.parse(next.airstamp) : null, status: next ? 'RELEASING' : (inSeason.length ? 'FINISHED' : 'NOT_YET_RELEASED') });
+}
+
+/* ---------- TMDB (movies) ---------- */
+async function fetchMovies(key){
+  const bearer = key.length > 40;
+  const headers = bearer ? { Authorization:'Bearer ' + key, accept:'application/json' } : { accept:'application/json' };
+  const get = async (path, page) => {
+    const r = await fetch('https://api.themoviedb.org/3/movie/' + path + '?' + (bearer ? '' : 'api_key=' + encodeURIComponent(key) + '&') + 'language=en-US&region=CA&page=' + page, { headers });
+    if (r.status === 401) throw new Error('key');
+    if (!r.ok) throw new Error('tmdb');
+    return (await r.json()).results || [];
+  };
+  const lists = await Promise.all([get('now_playing',1), get('now_playing',2), get('upcoming',1), get('upcoming',2), get('upcoming',3)]);
+  const lo = today(); lo.setDate(lo.getDate() - 45); const hi = today(); hi.setDate(hi.getDate() + 150);
+  const seen = new Map();
+  lists.flat().forEach(m => {
+    const d = parseDate(m.release_date);
+    if (!d || d < lo || d > hi || seen.has(m.id)) return;
+    seen.set(m.id, { id:m.id, t:m.title, d:m.release_date, w: d <= today() ? 'In theaters' : 'Theaters', cover: m.poster_path ? 'https://image.tmdb.org/t/p/w185' + m.poster_path : '', pop: m.popularity || 0 });
+  });
+  return [...seen.values()].sort((a,b) => a.d.localeCompare(b.d));
+}
+function ensureMovies(force){
+  if (!settings.tmdbKey) return;
+  const e = cache.movies;
+  if (ui.busy.movies || coolingDown('movies', force) || (!force && e && e.key === settings.tmdbKey.slice(-6) && Date.now() - e.at < 12 * HOUR)) return;
+  ui.busy.movies = true; ui.msg.movies = '';
+  (async () => {
+    try { cache.movies = { at: Date.now(), key: settings.tmdbKey.slice(-6), items: await fetchMovies(settings.tmdbKey) }; saveCache(); }
+    catch(err){ ui.failAt.movies = Date.now(); ui.msg.movies = err.message === 'key' ? 'TMDB didn’t accept your key. Check it in Settings.' : 'Couldn’t reach TMDB. ' + (e ? 'Showing the list from ' + ago(e.at) + '.' : 'Showing a saved list for now.'); }
+    finally { ui.busy.movies = false; if (ui.tab === 'season') render(); }
+  })();
+}
+
+/* ---------- Live episode info for your shows ---------- */
+function applyLive(s, live){
+  s.live = live;
+  if ((s.epOffset == null || s.epOffset === '') && live.aired != null){
+    const ep = Number(s.ep) || 0;
+    s.epOffset = ep > live.aired + 1 ? ep - live.aired : 0;
+  }
+}
+function searchTitle(t){ return String(t).replace(/[’‘]/g, "'").replace(/<3/g, '').trim(); }
+async function refreshShows(force){
+  if (ui.busy.shows) return;
+  const pending = state.shows.some(x => !x.noLink && !x.live);
+  if (!force && !pending && Date.now() - (cache.showsAt || 0) < 30 * 60000) return;
+  ui.busy.shows = true; ui.msg.shows = '';
+  let failed = false;
+  try {
+    const anime = state.shows.filter(s => typeOf(s) === 'anime' && !s.noLink);
+    const unlinked = anime.filter(s => !s.anilistId);
+    if (unlinked.length){
+      const q = 'query{' + unlinked.map((s, i) => {
+        const t = JSON.stringify(searchTitle(s.title));
+        return 'r' + i + ':Media(search:' + t + ',type:ANIME,status:RELEASING){id title{english romaji}} a' + i + ':Media(search:' + t + ',type:ANIME,sort:SEARCH_MATCH){id title{english romaji}}';
+      }).join(' ') + '}';
+      const d = await anilist(q);
+      unlinked.forEach((s, i) => {
+        const m = d['r' + i] || d['a' + i];
+        if (m){ s.anilistId = m.id; s.linkTitle = m.title.english || m.title.romaji; } else s.noLink = true;
+      });
+    }
+    const ids = anime.filter(s => s.anilistId).map(s => s.anilistId);
+    if (ids.length){
+      const d = await anilist('query($ids:[Int]){Page(perPage:50){media(id_in:$ids){id episodes status nextAiringEpisode{airingAt episode} coverImage{medium} title{english romaji}}}}', { ids });
+      const byId = {}; (d.Page.media || []).forEach(m => byId[m.id] = m);
+      anime.forEach(s => {
+        const m = byId[s.anilistId]; if (!m) return;
+        const n = m.nextAiringEpisode;
+        applyLive(s, { total: m.episodes || null, aired: n ? n.episode - 1 : (m.status === 'FINISHED' ? m.episodes : (m.status === 'NOT_YET_RELEASED' ? 0 : null)), at: n ? n.airingAt * 1000 : null, status: m.status });
+        if (!s.cover && m.coverImage) s.cover = m.coverImage.medium;
+        if (!s.linkTitle) s.linkTitle = m.title.english || m.title.romaji;
+      });
+    }
+  } catch(err){ failed = true; }
+  for (const s of state.shows.filter(x => typeOf(x) === 'tv' && !x.noLink)){
+    try { const show = await tvShowData(s); if (show) applyTV(s, show); else s.noLink = true; }
+    catch(err){ failed = true; }
+  }
+  if (failed) ui.msg.shows = 'Couldn’t update some episode info. It will try again next time you open the app.';
+  else { cache.showsAt = Date.now(); saveCache(); }
+  save();
+  ui.busy.shows = false;
+  render();
+}
+
+/* ---------- Airing math ---------- */
+function showInfo(s){
+  const ep = Number(s.ep) || 0, L = s.live, off = Number(s.epOffset) || 0;
+  const total = L && L.total ? L.total + off : (Number(s.total) || 0);
+  let aired = null, endText = '', airText = '';
+  if (L){
+    if (L.aired != null) aired = L.aired + off;
+    if (L.at) airText = 'Airs ' + fmtAir(L.at);
+    if (L.status === 'FINISHED') endText = 'Finished airing';
+    else if (L.total && L.at && L.aired != null){
+      const remaining = L.total - (L.aired + 1);
+      endText = remaining <= 0 ? 'Finale is next' : 'Ends ' + fmtDate(new Date(L.at + remaining * 7 * DAY_MS));
+    } else if (!L.total) endText = 'Episode count not announced';
+  } else {
+    const prem = parseDate(s.premiere), t = today();
+    if (prem){
+      const diff = Math.floor((t - prem) / DAY_MS);
+      aired = diff < 0 ? 0 : Math.floor(diff / 7) + 1;
+      if (total) aired = Math.min(aired, total);
+    }
+    if (total && prem){
+      const end = new Date(prem); end.setDate(end.getDate() + (Number(s.total) - 1) * 7);
+      const days = Math.round((end - t) / DAY_MS);
+      endText = days < 0 ? 'Finished airing' : days < 7 ? 'Finale airs ' + (days === 0 ? 'today' : DAYS_FULL[end.getDay()]) : 'Ends ' + fmtDate(end);
+    } else if (!total) endText = 'Add the episode count to see when it ends';
+  }
+  return { total, ep, left: total ? Math.max(total - ep, 0) : null, endText, airText,
+    behind: aired != null ? Math.max(aired - ep, 0) : 0, pct: total ? Math.min(100, Math.round(ep / total * 100)) : 0, finished: total > 0 && ep >= total };
+}
+function sortTime(s){ return s.time || (s.live && s.live.at ? hm(new Date(s.live.at)) : '99'); }
+
+
+/* ---------- Views ---------- */
+function render(){
+  document.querySelectorAll('nav.tabs button').forEach(b => {
+    if (b.dataset.tab === ui.tab) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current');
+  });
+  const v = $('#view');
+  const active = document.activeElement && document.activeElement.id;
+  v.innerHTML = ui.tab === 'week' ? weekView() : ui.tab === 'season' ? seasonView() : libraryView();
+  if (active === 'sq' || active === 'lq'){ const el = document.getElementById(active); if (el){ el.focus(); const n = el.value.length; try { el.setSelectionRange(n, n); } catch(_){} } }
+}
+
+const ICON_PLUS = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+const ICON_GEAR = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>';
+
+function weekView(){
+  const shows = state.shows;
+  const counts = DAYS.map((_, i) => shows.filter(s => s.day === i).length);
+  const td = new Date().getDay();
+  const dayShows = shows.filter(s => s.day === ui.day).sort((a,b) => sortTime(a).localeCompare(sortTime(b)));
+  const unset = shows.filter(s => s.day == null || s.day === '');
+  let h = '<div class="top"><div><div class="sub">' + esc(seasonLabel(CUR)) + '</div><h1>This week</h1></div>' +
+    '<div style="display:flex;gap:8px"><button class="iconbtn" data-act="settings" aria-label="Settings">' + ICON_GEAR + '</button>' +
+    '<button class="iconbtn" data-act="add-show" aria-label="Add a show">' + ICON_PLUS + '</button></div></div>';
+  h += '<div class="days" role="tablist" aria-label="Day of the week">' + DAYS.map((d,i) =>
+    '<button role="tab" aria-selected="' + (i===ui.day) + '" class="day' + (i===ui.day?' on':'') + (i===td?' today':'') + '" data-day="' + i + '" aria-label="' + DAYS_FULL[i] + ', ' + counts[i] + ' shows' + (i===td?', today':'') + '"><span class="l">' + d + '</span><span class="n">' + counts[i] + '</span></button>'
+  ).join('') + '</div>';
+  if (ui.busy.shows) h += '<p class="sync">Updating episode info…</p>';
+  else if (ui.msg.shows) h += '<p class="sync">' + esc(ui.msg.shows) + '</p>';
+  h += '<div class="sechead"><h2>' + DAYS_FULL[ui.day] + (ui.day===td ? ' (today)' : '') + '</h2><span class="sub">' + dayShows.length + ' show' + (dayShows.length===1?'':'s') + '</span></div>';
+  if (!shows.length && !state.library.length){
+    h += '<div class="empty"><div>Your week is empty. Pick this season’s shows, or bring in a backup from your old copy of the app.</div><div class="actions" style="width:100%"><button class="btn" data-goto="season">Browse ' + esc(seasonLabel(CUR)) + '</button><button class="btn ghost" data-act="settings">Restore a backup</button></div></div>';
+  } else if (!shows.length){
+    h += '<div class="empty"><div>Your week is empty. Pick this season’s shows and they’ll land on the right day.</div><button class="btn" data-goto="season">Browse ' + esc(seasonLabel(CUR)) + '</button></div>';
+  } else if (!dayShows.length){
+    h += '<div class="empty">Nothing on ' + DAYS_FULL[ui.day] + '.</div>';
+  } else {
+    h += '<div class="list">' + dayShows.map(showCard).join('') + '</div>';
+  }
+  if (unset.length){
+    h += '<div class="sechead" style="margin-top:22px"><h2>Day not set</h2><span class="sub">Tap a show to pick its day</span></div><div class="list">' + unset.map(showCard).join('') + '</div>';
+  }
+  if (state.watchlist.length){
+    const wl = state.watchlist.slice().sort((a,b) => (a.date||'9').localeCompare(b.date||'9'));
+    h += '<div class="sechead" style="margin-top:22px"><h2>Movies on your list</h2><span class="sub">' + wl.length + '</span></div><div class="list">' + wl.map(m =>
+      '<div class="card">' + tile(m.title, m.cover) +
+      '<div class="cardmain"><span class="ttl"><span>' + esc(m.title) + '</span></span><span class="meta">' + esc(whenText(m.date)) + '</span>' + (m.where ? '<span class="meta">' + esc(m.where) + '</span>' : '') + '</div>' +
+      '<div class="side"><button class="sbtn done" data-wdone="' + m.id + '" aria-label="Mark ' + esc(m.title) + ' as seen">Seen</button>' +
+      '<button class="sbtn" data-wdel="' + m.id + '" aria-label="Remove ' + esc(m.title) + ' from your list"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></div>'
+    ).join('') + '</div>';
+  }
+  return h;
+}
+
+function showCard(s){
+  const i = showInfo(s);
+  const epLine = (i.finished ? 'All ' + i.total + ' watched' : 'Next: ep ' + (i.ep + 1) + ' of ' + (i.total || '?')) + (s.time ? ', ' + fmtTime(s.time) : '');
+  const status = [i.airText, i.endText, (i.left != null && !i.finished) ? i.left + ' left' : ''].filter(Boolean).map((p, n) => n ? p[0].toLowerCase() + p.slice(1) : p).join(', ');
+  const behind = i.behind > 0 ? ' <b>' + i.behind + ' to catch up</b>' : '';
+  return '<div class="card">' + tile(s.title, s.cover) +
+    '<button class="cardmain" data-edit="' + s.id + '" aria-label="Edit ' + esc(s.title) + '">' +
+      '<span class="ttl"><span>' + esc(s.title) + '</span>' + (s.isNew ? '<span class="tag">NEW</span>' : '') + (typeOf(s) === 'tv' ? '<span class="tag tv">TV</span>' : '') + '</span>' +
+      '<span class="meta">' + esc(epLine) + '</span>' +
+      '<span class="bar"><i style="width:' + i.pct + '%"></i></span>' +
+      '<span class="meta">' + esc(status) + behind + '</span>' +
+    '</button>' +
+    '<div class="side">' +
+      '<button class="sbtn star' + (s.fav?' on':'') + '" data-fav="' + s.id + '" aria-pressed="' + !!s.fav + '" aria-label="Favorite ' + esc(s.title) + '"><svg width="20" height="20" viewBox="0 0 24 24" fill="' + (s.fav?'currentColor':'none') + '" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></svg></button>' +
+      (i.finished
+        ? '<button class="sbtn done" data-finish="' + s.id + '" aria-label="Move ' + esc(s.title) + ' to library">Done</button>'
+        : '<button class="sbtn" data-plus="' + s.id + '" aria-label="Watched episode ' + (i.ep + 1) + ' of ' + esc(s.title) + '">+1</button>') +
+    '</div></div>';
+}
+
+function chip(group, val, label, cur){
+  return '<button class="chipb' + (cur===val?' on':'') + '" aria-pressed="' + (cur===val) + '" data-' + group + '="' + val + '">' + esc(label) + '</button>';
+}
+function syncLine(kind, entry, extra){
+  if (ui.busy[kind]) return '<p class="sync">Updating' + (extra ? ' ' + esc(extra) : '') + '…</p>';
+  if (ui.msg[kind]) return '<p class="sync">' + esc(ui.msg[kind]) + ' <button class="linkbtn" data-retry="' + kind + '">Try again</button></p>';
+  if (entry) return '<p class="sync">Updated ' + ago(entry.at) + '. <button class="linkbtn" data-retry="' + kind + '">Refresh</button></p>';
+  return '';
+}
+
+function seasonView(){
+  const seg = '<div class="seg" role="group" aria-label="What to browse">' + [['anime','Anime'],['tv','TV'],['movie','Movies']].map(([k,l]) => '<button data-stype="' + k + '" aria-pressed="' + (k === ui.sType) + '">' + l + '</button>').join('') + '</div>';
+  if (ui.sType === 'movie') return moviesView(seg);
+  if (ui.sType === 'tv') return tvView(seg);
+  return animeView(seg);
+}
+
+function haveShow(x, idKey){
+  return state.shows.some(s => (x.id && s[idKey] === x.id) || norm(s.title) === norm(x.t));
+}
+function addButton(on, attr, val){
+  return on ? '<button class="btn added" data-goto="week">On my week</button>' : '<button class="btn ghost" ' + attr + '="' + esc(val) + '">Add to my week</button>';
+}
+function searchBox(placeholder){
+  return '<label class="vh" for="sq">' + esc(placeholder) + '</label><input id="sq" class="search" type="search" placeholder="' + esc(placeholder) + '" value="' + esc(ui.sQ) + '">';
+}
+
+function animeView(seg){
+  const so = ui.sSeason === 'next' ? NEXT : CUR, key = so.season + so.year, isCur = ui.sSeason !== 'next';
+  ensureAnime(so);
+  const entry = cache.anime[key];
+  let src = entry ? entry.items : [];
+  if (ui.crOnly) src = src.filter(x => x.cr);
+  if (!isCur && ui.sFilter === 'cont') ui.sFilter = 'all';
+  let items = src.filter(x => ui.sFilter === 'all' || (ui.sFilter === 'new' ? x.k === 'New' : ui.sFilter === 'ret' ? x.k === 'Returning' : x.k === 'Continuing'));
+  if (ui.sQ) items = items.filter(x => norm(x.t + ' ' + x.alt).includes(norm(ui.sQ)));
+  const n = k => src.filter(x => x.k === k).length;
+  let h = '<div class="top"><div><div class="sub">Live from AniList</div><h1>' + esc(seasonLabel(so)) + '</h1></div></div>' + seg;
+  h += '<div class="chips">' + chip('sseason','cur',seasonLabel(CUR),ui.sSeason) + chip('sseason','next',seasonLabel(NEXT),ui.sSeason) +
+    '<button class="chipb' + (ui.crOnly?' on':'') + '" aria-pressed="' + ui.crOnly + '" data-cronly="1">Crunchyroll only</button></div>';
+  h += '<div class="chips">' + chip('sfilter','all','All ' + src.length, ui.sFilter) + chip('sfilter','new','New ' + n('New'), ui.sFilter) +
+    chip('sfilter','ret','Returning ' + n('Returning'), ui.sFilter) + (isCur ? chip('sfilter','cont','Continuing ' + n('Continuing'), ui.sFilter) : '') + '</div>';
+  h += syncLine('anime', entry);
+  h += searchBox('Search ' + seasonLabel(so));
+  if (!entry && !ui.busy.anime) return h + '<div class="empty">The lineup couldn’t load yet.</div>';
+  if (!entry && ui.busy.anime) return h + '<div class="empty">Loading the ' + esc(seasonLabel(so)) + ' lineup…</div>';
+  h += '<div class="grid">' + items.map(x => {
+    let when;
+    if (x.at){ const d = new Date(x.at); when = DAYS_FULL[d.getDay()] + 's, ' + fmtTime(hm(d)); }
+    else if (x.status === 'FINISHED') when = 'Finished airing';
+    else when = x.start ? 'Starts ' + fmtDate(parseDate(x.start)) : 'Date not announced';
+    return '<div class="gcard"><div class="cover" style="background:' + tileColor(x.t) + '" aria-hidden="true">' + (x.cover ? '<img src="' + esc(x.cover) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : esc(initials(x.t))) + '</div>' +
+      '<div class="body"><div class="name">' + esc(x.t) + '</div><div class="meta">' + esc(x.k + (x.eps ? ', ' + x.eps + ' eps' : '')) + '</div><div class="meta">' + esc(when) + '</div><div class="spacer"></div>' +
+      addButton(haveShow(x, 'anilistId'), 'data-anime', x.id) + '</div></div>';
+  }).join('') + '</div>';
+  if (entry && !items.length) h += '<div class="empty">No shows match.' + (ui.crOnly ? ' <button class="linkbtn" data-cronly="1">Show all streaming services</button>' : '') + '</div>';
+  h += '<div style="margin-top:14px"><button class="btn ghost" style="width:100%" data-act="add-show">Add a show that isn’t listed</button></div>';
+  h += '<p class="note">Air times are the Japanese broadcast in your time zone. Crunchyroll usually posts the episode within an hour or so, and can be later for some shows.</p>';
+  return h;
+}
+
+function tvView(seg){
+  ensureTV();
+  if (ui.sFilter === 'cont') ui.sFilter = 'all';
+  const live = cache.tv;
+  const src = live ? live.items : TV_FALLBACK;
+  let items = src.filter(x => ui.sFilter === 'all' || (ui.sFilter === 'new' ? x.k === 'New' : x.k === 'Returning'));
+  if (ui.sQ) items = items.filter(x => norm(x.t).includes(norm(ui.sQ)));
+  const nNew = src.filter(x => x.k === 'New').length, t0 = today();
+  let h = '<div class="top"><div><div class="sub">Live from TVmaze</div><h1>TV premieres</h1></div></div>' + seg;
+  h += '<div class="chips">' + chip('sfilter','all','All ' + src.length, ui.sFilter) + chip('sfilter','new','New ' + nNew, ui.sFilter) + chip('sfilter','ret','Returning ' + (src.length - nNew), ui.sFilter) + '</div>';
+  h += syncLine('tv', live, ui.msg.tvProgress ? '(' + ui.msg.tvProgress + ')' : '');
+  if (!live && ui.busy.tv) h += '<p class="sync">The first update takes about half a minute. Here’s a saved list in the meantime.</p>';
+  h += searchBox('Search TV premieres');
+  h += '<div class="grid">' + items.map(x => {
+    const pd = parseDate(x.p), d = pd ? pd.getDay() : 0;
+    const when = !pd ? 'Date not announced' : x.full ? (pd <= t0 ? 'All episodes out ' : 'All episodes ') + fmtDate(pd) : DAYS_FULL[d] + 's, ' + (pd <= t0 ? 'since ' : 'from ') + fmtDate(pd);
+    return '<div class="gcard"><div class="cover" style="background:' + tileColor(x.t) + '" aria-hidden="true">' + (x.cover ? '<img src="' + esc(x.cover) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : esc(initials(x.t))) + '</div>' +
+      '<div class="body"><div class="name">' + esc(x.t) + '</div><div class="meta">' + esc(x.k + (x.w ? ', ' + x.w : '')) + '</div><div class="meta">' + esc(when) + '</div><div class="spacer"></div>' +
+      addButton(haveShow(x, 'tvmazeId'), 'data-tvshow', x.t) + '</div></div>';
+  }).join('') + '</div>';
+  if (!items.length) h += '<div class="empty">No shows match.</div>';
+  h += '<div style="margin-top:14px"><button class="btn ghost" style="width:100%" data-act="add-show">Add a show that isn’t listed</button></div>';
+  h += '<p class="note">Premieres from the last week and the next three weeks, U.S. networks and streaming. Streaming shows usually drop the same day in Canada.</p>';
+  return h;
+}
+
+function moviesView(seg){
+  ensureMovies();
+  const live = settings.tmdbKey ? cache.movies : null, t0 = today();
+  const onList = new Set(state.watchlist.map(m => norm(m.title)));
+  const seen = new Set(state.library.filter(x => typeOf(x) === 'movie').map(x => norm(x.title)));
+  let items = (live ? live.items : MOVIES_FALLBACK).slice();
+  if (ui.mFilter === 'soon') items = items.filter(m => parseDate(m.d) > t0);
+  if (ui.mFilter === 'out') items = items.filter(m => parseDate(m.d) <= t0);
+  if (ui.sQ) items = items.filter(m => norm(m.t).includes(norm(ui.sQ)));
+  let h = '<div class="top"><div><div class="sub">' + (live ? 'Live from TMDB, Canadian dates' : 'In theaters and streaming') + '</div><h1>Movies</h1></div></div>' + seg;
+  h += '<div class="chips">' + chip('mfilter','all','All',ui.mFilter) + chip('mfilter','soon','Coming soon',ui.mFilter) + chip('mfilter','out','Out now',ui.mFilter) + '</div>';
+  if (!settings.tmdbKey) h += '<div class="empty" style="margin-bottom:12px"><div>This is a saved list. Add a free TMDB key and this tab fills itself with what’s in Canadian theaters and coming soon.</div><button class="btn" data-act="settings">Add TMDB key</button></div>';
+  else h += syncLine('movies', live);
+  h += searchBox('Search movies');
+  h += '<div class="list">' + items.map(m => {
+    const key = norm(m.t);
+    const btn = seen.has(key) ? '<span class="meta" style="padding:0 6px">Seen</span>'
+      : onList.has(key) ? '<button class="btn added" style="min-height:40px;font-size:13px;padding:0 12px" data-goto="week">On my list</button>'
+      : '<button class="btn ghost" style="min-height:40px;font-size:13px;padding:0 12px" data-movie="' + esc(m.t) + '">Add to list</button>';
+    return '<div class="card">' + tile(m.t, m.cover) +
+      '<div class="cardmain"><span class="ttl"><span>' + esc(m.t) + '</span></span><span class="meta">' + esc(whenText(m.d)) + '</span><span class="meta">' + esc(m.w) + '</span></div>' + btn + '</div>';
+  }).join('') + '</div>';
+  if (!items.length) h += '<div class="empty">No movies match.</div>';
+  h += '<div style="margin-top:14px"><button class="btn ghost" style="width:100%" data-act="add-movie">Add a movie that isn’t listed</button></div>';
+  return h;
+}
+
+function libraryView(){
+  const all = state.library;
+  const lib = all.filter(x => typeOf(x) === ui.lType);
+  const isMovie = ui.lType === 'movie';
+  const eps = lib.reduce((a,x) => a + (Number(x.eps)||0), 0);
+  const favs = lib.filter(x => x.fav).length;
+  let items = lib.filter(x => ui.lFilter==='all' || (ui.lFilter==='fav' ? x.fav : x.status === ui.lFilter));
+  if (ui.lQ) items = items.filter(x => norm(x.title).includes(norm(ui.lQ)));
+  items.sort((a,b) => a.title.localeCompare(b.title));
+  let h = '<div class="top"><div><div class="sub">Everything you’ve watched</div><h1>Library</h1></div>' +
+    '<div style="display:flex;gap:8px"><button class="btn ghost" data-act="import">Import</button>' +
+    '<button class="iconbtn" data-act="add-lib" aria-label="Add to library"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div></div>';
+  h += '<div class="seg" role="group" aria-label="Library type">' + Object.keys(TYPES).map(k => '<button data-ltype="' + k + '" aria-pressed="' + (k === ui.lType) + '">' + TYPES[k] + ' <span>' + all.filter(x => typeOf(x) === k).length + '</span></button>').join('') + '</div>';
+  h += '<div class="stats"><div class="stat"><span class="v">' + lib.length + '</span><span class="k">' + (isMovie ? 'Movies' : 'Shows') + '</span></div><div class="stat"><span class="v">' + (isMovie ? lib.filter(x => x.status !== 'dropped').length : eps) + '</span><span class="k">' + (isMovie ? 'Finished' : 'Episodes') + '</span></div><div class="stat"><span class="v" style="color:var(--accent-ink)">' + favs + '</span><span class="k">Favorites</span></div></div>';
+  h += '<label class="vh" for="lq">Search your library</label><input id="lq" class="search" type="search" placeholder="Search your library" value="' + esc(ui.lQ) + '">';
+  h += '<div class="chips">' + chip('lfilter','all','All',ui.lFilter) + chip('lfilter','fav','Favorites',ui.lFilter) + chip('lfilter','completed','Completed',ui.lFilter) + chip('lfilter','dropped','Dropped',ui.lFilter) + '</div>';
+  if (!lib.length){
+    h += '<div class="empty"><div>' + (ui.lType === 'anime' ? 'Finished shows from your week land here. You can also bring in your Excel list.' : 'No ' + (ui.lType === 'tv' ? 'TV shows' : 'movies') + ' yet. Bring in your Excel list or add one with +.') + '</div><button class="btn" data-act="import">Import from Excel</button></div>';
+  } else if (!items.length){
+    h += '<div class="empty">Nothing matches.</div>';
+  } else {
+    h += '<div class="rows">' + items.map(x => {
+      const bits = [x.season, x.eps ? x.eps + ' eps' : '', x.status === 'dropped' ? 'Dropped' : ''].filter(Boolean).join(', ');
+      return '<button class="row" data-libedit="' + x.id + '"><span class="tile" style="background:' + tileColor(x.title) + '" aria-hidden="true">' + esc(initials(x.title)) + '</span>' +
+        '<span class="info"><span>' + esc(x.title) + '</span><span class="meta">' + esc(bits || 'No details yet') + '</span></span>' +
+        (x.fav ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round" style="color:var(--accent-ink);flex-shrink:0" role="img" aria-label="Favorite"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></svg>' : '') +
+        '</button>';
+    }).join('') + '</div>';
+  }
+  return h;
+}
+
+/* ---------- Sheets ---------- */
+function openSheet(html, onMount){
+  const m = $('#modal');
+  m.innerHTML = '<div class="scrim" data-close="1"><div class="sheet" role="dialog" aria-modal="true">' + html + '</div></div>';
+  const first = m.querySelector('input,select,textarea,button');
+  if (first) first.focus();
+  if (onMount) onMount(m.querySelector('.sheet'));
+}
+function closeSheet(){ $('#modal').innerHTML = ''; }
+
+function libSheet(x, isNewEntry){
+  openSheet(
+    '<h2>' + (isNewEntry ? 'Add to library' : 'Edit entry') + '</h2>' +
+    '<div class="field"><label for="l-title">Title</label><input id="l-title" value="' + esc(x.title) + '"></div>' +
+    '<div class="field"><label for="l-type">Type</label><select id="l-type">' + typeOptions(typeOf(x)) + '</select></div>' +
+    '<div class="two"><div class="field"><label for="l-season">Season</label><input id="l-season" placeholder="e.g. Fall 2026" value="' + esc(x.season||'') + '"></div>' +
+    '<div class="field"><label for="l-eps">Episodes</label><input id="l-eps" type="number" inputmode="numeric" min="0" value="' + (x.eps||'') + '"></div></div>' +
+    '<div class="field"><label for="l-status">Status</label><select id="l-status"><option value="completed"' + (x.status!=='dropped'?' selected':'') + '>Completed</option><option value="dropped"' + (x.status==='dropped'?' selected':'') + '>Dropped</option></select></div>' +
+    '<label class="check"><input id="l-fav" type="checkbox"' + (x.fav?' checked':'') + '> Favorite</label>' +
+    '<div class="actions"><button class="btn ghost" data-close="1">Cancel</button><button class="btn" id="l-save">' + (isNewEntry ? 'Add' : 'Save changes') + '</button></div>' +
+    (isNewEntry ? '' : '<div class="actions"><button class="btn danger" id="l-del">Delete from library</button></div>'),
+    sheet => {
+      $('#l-save', sheet).addEventListener('click', () => {
+        const title = $('#l-title', sheet).value.trim();
+        if (!title){ toast('Add a title first'); return; }
+        Object.assign(x, { title, type: $('#l-type', sheet).value, season: $('#l-season', sheet).value.trim(), eps: parseInt($('#l-eps', sheet).value,10) || null, status: $('#l-status', sheet).value, fav: $('#l-fav', sheet).checked });
+        if (isNewEntry) state.library.push(x);
+        save(); closeSheet(); render();
+      });
+      if (!isNewEntry) $('#l-del', sheet).addEventListener('click', () => {
+        if (!confirm('Delete ' + x.title + ' from your library?')) return;
+        state.library = state.library.filter(y => y.id !== x.id); save(); closeSheet(); render();
+      });
+    }
+  );
+}
+
+function importSheet(){
+  openSheet(
+    '<h2>Import from Excel</h2>' +
+    '<p class="meta" style="margin:0">In Excel, select your rows and copy them, then paste here. Columns in this order: Title, Season, Episodes, Favorite (Y or yes). Only Title is needed; a header row is skipped.</p>' +
+    '<div class="field"><label for="imp-type">Import into</label><select id="imp-type">' + typeOptions(ui.lType) + '</select></div>' +
+    '<div class="field"><label for="imp">Pasted rows</label><textarea id="imp" placeholder="Title	Season	Episodes	Favorite"></textarea></div>' +
+    '<div class="actions"><button class="btn ghost" data-close="1">Cancel</button><button class="btn" id="imp-go">Import rows</button></div>',
+    sheet => {
+      $('#imp-go', sheet).addEventListener('click', () => {
+        const lines = $('#imp', sheet).value.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+        const typ = $('#imp-type', sheet).value;
+        const have = new Set(state.library.filter(x => typeOf(x) === typ).map(x => norm(x.title)));
+        let added = 0, dup = 0;
+        lines.forEach((line, idx) => {
+          const c = line.split('\t').map(v => v.trim());
+          if (idx === 0 && norm(c[0]) === 'title') return;
+          if (!c[0]) return;
+          if (have.has(norm(c[0]))){ dup++; return; }
+          have.add(norm(c[0]));
+          state.library.push({ id: uid(), type: typ, title: c[0], season: c[1]||'', eps: parseInt(c[2],10) || null, fav: /^(y|yes|x|true|1|★)$/i.test(c[3]||''), status:'completed' });
+          added++;
+        });
+        if (!added && !dup){ toast('Paste at least one row first'); return; }
+        ui.lType = typ; ui.lFilter = 'all'; ui.lQ = '';
+        save(); closeSheet(); render();
+        toast('Imported ' + added + (dup ? ', skipped ' + dup + ' already in library' : ''));
+      });
+    }
+  );
+}
+
+function showSheet(s, isNewEntry){
+  const dayOpts = '<option value="">Not set</option>' + DAYS_FULL.map((d,i) => '<option value="' + i + '"' + (s.day===i?' selected':'') + '>' + d + '</option>').join('');
+  const L = s.live, linked = s.anilistId || s.tvmazeId;
+  const autoTotal = L && L.total ? L.total + (Number(s.epOffset) || 0) : null;
+  const linkLine = linked
+    ? '<p class="meta" style="margin:0">Episode info from ' + (s.anilistId ? 'AniList' : 'TVmaze') + (s.linkTitle ? ': ' + esc(s.linkTitle) : '') + '. <button class="linkbtn" id="f-unlink">Wrong show? Unlink it</button></p>'
+    : (!isNewEntry && s.noLink ? '<p class="meta" style="margin:0">No live episode info found for this title. <button class="linkbtn" id="f-relink">Search again</button></p>' : '');
+  openSheet(
+    '<h2>' + (isNewEntry ? 'Add to my week' : 'Edit show') + '</h2>' + linkLine +
+    '<div class="field"><label for="f-title">Title</label><input id="f-title" value="' + esc(s.title) + '" required></div>' +
+    '<div class="two"><div class="field"><label for="f-day">Day</label><select id="f-day">' + dayOpts + '</select></div>' +
+    '<div class="field"><label for="f-time">Time</label><input id="f-time" type="time" value="' + esc(s.time||'') + '"></div></div>' +
+    '<div class="two"><div class="field"><label for="f-ep">Next episode</label><input id="f-ep" type="number" inputmode="numeric" min="1" value="' + ((Number(s.ep)||0) + 1) + '"></div>' +
+    '<div class="field"><label for="f-total">Total episodes</label><input id="f-total" type="number" inputmode="numeric" min="1" ' +
+      (autoTotal ? 'placeholder="' + autoTotal + ' (auto)" disabled' : 'placeholder="Unknown" value="' + (s.total||'') + '"') + '></div></div>' +
+    (linked ? '<div class="field"><label for="f-off">Your episode numbers run ahead by</label><input id="f-off" type="number" inputmode="numeric" min="0" value="' + (Number(s.epOffset)||0) + '"><span class="meta">For sequels numbered from the first season, like Black Clover’s episode 175. Set automatically; change it if it’s off.</span></div>' : '') +
+    '<div class="two"><div class="field"><label for="f-prem">First episode date</label><input id="f-prem" type="date" value="' + esc(s.premiere||'') + '"></div>' +
+    '<div class="field"><label for="f-kind">Type</label><select id="f-kind"><option value="new"' + (s.isNew?' selected':'') + '>New</option><option value="ret"' + (!s.isNew?' selected':'') + '>Returning</option></select></div></div>' +
+    '<label class="check"><input id="f-fav" type="checkbox"' + (s.fav?' checked':'') + '> Favorite this season</label>' +
+    '<div class="actions"><button class="btn ghost" data-close="1">Cancel</button><button class="btn" id="f-save">' + (isNewEntry ? 'Add show' : 'Save changes') + '</button></div>' +
+    (isNewEntry ? '' : '<div class="actions"><button class="btn ghost" id="f-finish">Move to library</button><button class="btn danger" id="f-del">Remove</button></div>'),
+    sheet => {
+      $('#f-prem', sheet).addEventListener('change', e => { const d = dayFromDate(e.target.value); if (d != null && $('#f-day', sheet).value === '') $('#f-day', sheet).value = d; });
+      $('#f-save', sheet).addEventListener('click', () => {
+        const title = $('#f-title', sheet).value.trim();
+        if (!title){ $('#f-title', sheet).focus(); toast('Add a title first'); return; }
+        const renamed = !isNewEntry && norm(title) !== norm(s.title);
+        const dv = $('#f-day', sheet).value;
+        Object.assign(s, {
+          title, day: dv === '' ? null : Number(dv), time: $('#f-time', sheet).value,
+          ep: Math.max(0, (parseInt($('#f-ep', sheet).value,10) || 1) - 1),
+          premiere: $('#f-prem', sheet).value, isNew: $('#f-kind', sheet).value === 'new', fav: $('#f-fav', sheet).checked
+        });
+        if (!autoTotal) s.total = parseInt($('#f-total', sheet).value,10) || null;
+        const offEl = $('#f-off', sheet); if (offEl) s.epOffset = Math.max(0, parseInt(offEl.value,10) || 0);
+        if (renamed){ s.anilistId = null; s.tvmazeId = null; s.live = null; s.linkTitle = ''; s.noLink = false; s.epOffset = null; s.cover = ''; }
+        if (isNewEntry){ state.shows.push(s); if (s.day != null) ui.day = s.day; }
+        save(); closeSheet(); render();
+        if (isNewEntry) toast('Added ' + title);
+        if (isNewEntry || renamed) refreshShows(true);
+      });
+      const un = $('#f-unlink', sheet);
+      if (un) un.addEventListener('click', () => {
+        Object.assign(s, { anilistId:null, tvmazeId:null, live:null, linkTitle:'', noLink:true, epOffset:null, cover:'' });
+        save(); closeSheet(); render(); toast('Unlinked. Episode info is manual for this show now.');
+      });
+      const re = $('#f-relink', sheet);
+      if (re) re.addEventListener('click', () => { s.noLink = false; s.epOffset = null; save(); closeSheet(); refreshShows(true); });
+      if (!isNewEntry){
+        $('#f-del', sheet).addEventListener('click', () => {
+          if (!confirm('Remove ' + s.title + ' from your week?')) return;
+          state.shows = state.shows.filter(x => x.id !== s.id); save(); closeSheet(); render(); toast('Removed ' + s.title);
+        });
+        $('#f-finish', sheet).addEventListener('click', () => { closeSheet(); finishShow(s.id, true); });
+      }
+    }
+  );
+}
+
+function settingsSheet(){
+  openSheet(
+    '<h2>Settings</h2>' +
+    '<div class="field"><label for="s-tmdb">TMDB key for live movie dates</label><input id="s-tmdb" autocomplete="off" spellcheck="false" value="' + esc(settings.tmdbKey) + '" placeholder="Paste your API key or read access token">' +
+    '<span class="meta">Free: sign up at themoviedb.org, then Settings › API. It stays on this device.</span></div>' +
+    '<div class="actions"><button class="btn" id="s-save">Save key</button></div>' +
+    '<h2 style="margin-top:8px">Your data</h2>' +
+    '<p class="meta" style="margin:0">Everything is saved on this device only. Download a backup now and then, and use it to move to a new phone.</p>' +
+    '<div class="actions"><button class="btn ghost" id="s-export">Download backup</button>' +
+    '<label class="btn ghost" style="display:flex;align-items:center;justify-content:center;cursor:pointer">Restore backup<input id="s-import" type="file" accept=".json,application/json" class="vh"></label></div>' +
+    '<div class="actions"><button class="btn ghost" id="s-refresh">Refresh all live data</button></div>' +
+    '<p class="note" style="margin:4px 0 0">Anime data from <a href="https://anilist.co" target="_blank" rel="noopener">AniList</a>. TV data from <a href="https://www.tvmaze.com" target="_blank" rel="noopener">TVmaze</a> (CC BY-SA). This product uses the TMDB API but is not endorsed or certified by TMDB.</p>' +
+    '<div class="actions"><button class="btn ghost" data-close="1">Close</button></div>',
+    sheet => {
+      $('#s-save', sheet).addEventListener('click', () => {
+        settings.tmdbKey = $('#s-tmdb', sheet).value.trim(); saveSettings(); cache.movies = null; saveCache();
+        closeSheet(); toast(settings.tmdbKey ? 'Key saved. Movies will load live.' : 'Key removed.');
+        if (settings.tmdbKey){ ui.tab = 'season'; ui.sType = 'movie'; ui.sQ = ''; }
+        render();
+      });
+      $('#s-export', sheet).addEventListener('click', () => {
+        const blob = new Blob([JSON.stringify({ app:'airday', v:2, exportedAt:new Date().toISOString(), state }, null, 1)], { type:'application/json' });
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'airday-backup-' + ymd(new Date()) + '.json';
+        document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+      });
+      $('#s-import', sheet).addEventListener('change', async e => {
+        const f = e.target.files && e.target.files[0]; if (!f) return;
+        try {
+          const j = JSON.parse(await f.text());
+          const incoming = j.state ? j.state : (typeof j.json === 'string' ? JSON.parse(j.json) : j);
+          if (!incoming || (!Array.isArray(incoming.shows) && !Array.isArray(incoming.library))) throw new Error('shape');
+          const n = (incoming.shows||[]).length, m = (incoming.library||[]).length;
+          if ((state.shows.length || state.library.length) && !confirm('Replace what’s on this device with the backup (' + n + ' shows, ' + m + ' library titles)?')) return;
+          state = Object.assign(blank(), incoming); cache.showsAt = 0; save(); saveCache();
+          closeSheet(); render(); toast('Restored ' + n + ' shows and ' + m + ' library titles');
+          refreshShows(true);
+        } catch(err){ toast('That file isn’t an Airday backup.'); }
+      });
+      $('#s-refresh', sheet).addEventListener('click', () => {
+        closeSheet(); cache.anime = {}; cache.tv = null; cache.movies = null; cache.showsAt = 0; saveCache();
+        refreshShows(true); render(); toast('Refreshing. TV premieres take about half a minute.');
+      });
+    }
+  );
+}
+
+function movieSheet(){
+  openSheet(
+    '<h2>Add a movie</h2>' +
+    '<div class="field"><label for="m-title">Title</label><input id="m-title"></div>' +
+    '<div class="two"><div class="field"><label for="m-date">Release date</label><input id="m-date" type="date"></div>' +
+    '<div class="field"><label for="m-where">Where</label><input id="m-where" placeholder="Theaters, Netflix…"></div></div>' +
+    '<div class="actions"><button class="btn ghost" data-close="1">Cancel</button><button class="btn" id="m-save">Add to list</button></div>',
+    sheet => {
+      $('#m-save', sheet).addEventListener('click', () => {
+        const title = $('#m-title', sheet).value.trim();
+        if (!title){ $('#m-title', sheet).focus(); toast('Add a title first'); return; }
+        state.watchlist.push({ id: uid(), title, date: $('#m-date', sheet).value, where: $('#m-where', sheet).value.trim() });
+        save(); closeSheet(); render(); toast('Added ' + title + ' to your list');
+      });
+    }
+  );
+}
+
+function finishShow(id, fromSheet){
+  const s = state.shows.find(x => x.id === id);
+  if (!s) return;
+  const i = showInfo(s), typ = typeOf(s);
+  const existing = state.library.find(x => typeOf(x) === typ && norm(x.title) === norm(s.title));
+  const entry = { season: seasonLabel(CUR), eps: i.total || s.ep || null, fav: !!s.fav, status: i.finished ? 'completed' : (fromSheet && confirm('Mark ' + s.title + ' as dropped? Cancel keeps it as completed.') ? 'dropped' : 'completed') };
+  if (existing) Object.assign(existing, entry); else state.library.push(Object.assign({ id: uid(), type: typ, title: s.title }, entry));
+  state.shows = state.shows.filter(x => x.id !== id);
+  save(); render(); toast(s.title + ' moved to your library');
+}
+
+/* ---------- Events ---------- */
+document.addEventListener('click', e => {
+  const t = e.target.closest('button,[data-close]');
+  if (!t) return;
+  if (t.dataset.close && (t === e.target || t.tagName === 'BUTTON')){ if (t.classList.contains('scrim') && e.target !== t) return; closeSheet(); return; }
+  const d = t.dataset;
+  if (d.tab){ ui.tab = d.tab; render(); window.scrollTo(0,0); if (d.tab === 'week') refreshShows(false); return; }
+  if (d.goto){ ui.tab = d.goto; render(); window.scrollTo(0,0); return; }
+  if (d.day != null){ ui.day = Number(d.day); render(); return; }
+  if (d.stype){ ui.sType = d.stype; ui.sFilter = 'all'; ui.sQ = ''; render(); return; }
+  if (d.sseason){ ui.sSeason = d.sseason; ui.sFilter = 'all'; render(); return; }
+  if (d.cronly){ ui.crOnly = !ui.crOnly; render(); return; }
+  if (d.sfilter){ ui.sFilter = d.sfilter; render(); return; }
+  if (d.mfilter){ ui.mFilter = d.mfilter; render(); return; }
+  if (d.lfilter){ ui.lFilter = d.lfilter; render(); return; }
+  if (d.ltype){ ui.lType = d.ltype; render(); return; }
+  if (d.retry){
+    if (d.retry === 'anime') ensureAnime(ui.sSeason === 'next' ? NEXT : CUR, true);
+    if (d.retry === 'tv') ensureTV(true);
+    if (d.retry === 'movies') ensureMovies(true);
+    render(); return;
+  }
+  if (d.plus){
+    const s = state.shows.find(x => x.id === d.plus); if (!s) return;
+    s.ep = (Number(s.ep)||0) + 1;
+    const tot = showInfo(s).total; if (tot) s.ep = Math.min(s.ep, tot);
+    save(); render();
+    if (tot && s.ep >= tot) toast('Finished ' + s.title + '. Tap Done to move it to your library.');
+    return;
+  }
+  if (d.fav){ const s = state.shows.find(x => x.id === d.fav); if (s){ s.fav = !s.fav; save(); render(); } return; }
+  if (d.finish){ finishShow(d.finish, false); return; }
+  if (d.edit){ const s = state.shows.find(x => x.id === d.edit); if (s) showSheet(s, false); return; }
+  if (d.libedit){ const x = state.library.find(y => y.id === d.libedit); if (x) libSheet(x, false); return; }
+  if (d.anime){
+    const so = ui.sSeason === 'next' ? NEXT : CUR, entry = cache.anime[so.season + so.year];
+    const x = entry && entry.items.find(y => String(y.id) === d.anime); if (!x) return;
+    const at = x.at ? new Date(x.at) : null;
+    const s = { id: uid(), type:'anime', title: x.t, anilistId: x.id, linkTitle: x.t, cover: x.cover, day: at ? at.getDay() : dayFromDate(x.start),
+      time: at ? hm(at) : '', ep:0, total:null, premiere: x.start, isNew: x.k === 'New', fav:false, epOffset:0,
+      live: { total: x.eps, aired: x.next ? x.next - 1 : (x.status === 'FINISHED' ? x.eps : 0), at: x.at, status: x.status } };
+    showSheet(s, true);
+    return;
+  }
+  if (d.tvshow){
+    const src = cache.tv ? cache.tv.items : TV_FALLBACK;
+    const x = src.find(y => y.t === d.tvshow); if (!x) return;
+    showSheet({ id: uid(), type:'tv', title: x.t, tvmazeId: x.id || null, cover: x.cover || '', day: dayFromDate(x.p), time:'', ep:0, total:null, premiere: x.p, isNew: x.k === 'New', fav:false }, true);
+    return;
+  }
+  if (d.movie){
+    const src = settings.tmdbKey && cache.movies ? cache.movies.items : MOVIES_FALLBACK;
+    const m = src.find(y => y.t === d.movie); if (!m) return;
+    state.watchlist.push({ id: uid(), title: m.t, date: m.d, where: m.w, cover: m.cover || '' }); save(); render(); toast('Added ' + m.t + ' to your list');
+    return;
+  }
+  if (d.wdone){
+    const m = state.watchlist.find(y => y.id === d.wdone); if (!m) return;
+    if (!state.library.some(x => typeOf(x) === 'movie' && norm(x.title) === norm(m.title))) state.library.push({ id: uid(), type:'movie', title: m.title, season: m.date ? m.date.slice(0,4) : '', eps:null, fav:false, status:'completed' });
+    state.watchlist = state.watchlist.filter(y => y.id !== m.id); save(); render(); toast(m.title + ' moved to your library');
+    return;
+  }
+  if (d.wdel){ state.watchlist = state.watchlist.filter(y => y.id !== d.wdel); save(); render(); return; }
+  if (d.act === 'settings'){ settingsSheet(); return; }
+  if (d.act === 'add-movie'){ movieSheet(); return; }
+  if (d.act === 'add-show'){ showSheet({ id: uid(), type: (ui.tab === 'season' && ui.sType === 'tv') ? 'tv' : 'anime', title:'', day: null, time:'', ep:0, total:null, premiere:'', isNew:true, fav:false }, true); return; }
+  if (d.act === 'add-lib'){ libSheet({ id: uid(), type: ui.lType, title:'', season:'', eps:null, status:'completed', fav:false }, true); return; }
+  if (d.act === 'import'){ importSheet(); return; }
+});
+let searchTimer = null;
+document.addEventListener('input', e => {
+  if (e.target.id === 'sq' || e.target.id === 'lq'){
+    if (e.target.id === 'sq') ui.sQ = e.target.value; else ui.lQ = e.target.value;
+    clearTimeout(searchTimer); searchTimer = setTimeout(render, 150);
+  }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#modal').innerHTML) closeSheet(); });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible'){ render(); refreshShows(false); } });
+
+render();
+refreshShows(false);
+})();
+
+</script>
+</body>
+</html>
