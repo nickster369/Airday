@@ -102,7 +102,7 @@ h2{margin:0;font-family:'Space Grotesk',system-ui,sans-serif;font-size:18px;font
 .row .info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .row .info span:first-child{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);padding:8px 12px calc(10px + env(safe-area-inset-bottom,0px))}
-nav.tabs .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+nav.tabs .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
 nav.tabs button{min-height:48px;border:none;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:500;color:var(--muted)}
 nav.tabs button[aria-current="page"]{color:var(--accent-ink);font-weight:600}
 .scrim{position:fixed;inset:0;background:var(--scrim);z-index:30;display:flex;align-items:flex-end;justify-content:center}
@@ -131,6 +131,48 @@ nav.tabs button[aria-current="page"]{color:var(--accent-ink);font-weight:600}
 .tile img,.gcard .cover img{width:100%;height:100%;object-fit:cover;display:block}
 .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
 .gcard .cover{height:auto;aspect-ratio:2/3}
+.day.hasnew::before{content:"";position:absolute;top:7px;right:8px;width:7px;height:7px;border-radius:4px;background:var(--accent)}
+.day.on.hasnew::before{background:var(--on-accent)}
+.tag.hot{background:var(--accent);color:var(--on-accent)}
+.tag.fav{background:var(--chip);color:var(--accent-ink)}
+.banner{background:var(--surface);border-radius:16px;padding:14px;margin:0 0 14px;display:flex;flex-direction:column;gap:10px;font-size:14px}
+.banner.hot{border:1px solid var(--accent)}
+.banner .actions{margin:0}
+.side .sbtn{height:34px}
+.sbtn.play{color:var(--accent-ink);background:transparent;text-decoration:none}
+a.btn{display:flex;align-items:center;justify-content:center;text-decoration:none}
+a.wlink{color:var(--accent-ink);text-decoration:underline}
+.stars{color:var(--accent-ink);letter-spacing:1px}
+.row .info .notep{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-style:italic}
+.stars-pick{display:flex;gap:6px}
+.starbtn{width:44px;height:44px;border:none;border-radius:10px;background:var(--chip);color:var(--muted);display:flex;align-items:center;justify-content:center}
+.starbtn.on{color:var(--accent-ink)}
+.field textarea.note-in{min-height:84px;font-family:inherit;font-size:15px}
+.flabel{font-size:13px;color:var(--muted);font-weight:500}
+.panel{background:var(--surface);border-radius:16px;padding:16px;margin-bottom:12px;display:flex;flex-direction:column;gap:10px}
+.panel .actions{margin:0}
+.codebox.small{font-size:13px;letter-spacing:0}
+.friend{background:var(--surface);border-radius:16px;padding:14px;margin-bottom:12px}
+.friend .fhead{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px}
+.friend .card{background:var(--bg);padding:10px}
+.friend .tile{width:40px;height:56px;font-size:14px}
+.frlist{display:flex;flex-direction:column;gap:8px}
+.btn.small{min-height:40px;font-size:13px;padding:0 14px}
+.wraprow{display:flex;gap:12px;align-items:flex-start}
+.wraprow .info{flex:1;display:flex;flex-direction:column;gap:4px;min-width:0}
+.wraprow .name{font-weight:600}
+.wraprow .tile{width:44px;height:62px}
+.wraprow select{min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--bg);padding:8px 10px;font-size:15px;width:100%;color:inherit}
+.ystats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.ystat{background:var(--bg);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:2px}
+.ystat .v{font-family:'Space Grotesk',system-ui,sans-serif;font-size:24px;font-weight:700}
+.ystat .k{font-size:12px;color:var(--muted)}
+.yline{font-size:14px;margin:0}
+.fres{padding:10px;align-items:center}
+.fres .tile{width:44px;height:62px;font-size:14px}
+.fres .ttl .wrap{white-space:normal;overflow:visible}
+.fbtns{display:flex;flex-direction:column;gap:6px;align-items:stretch;flex-shrink:0;width:118px}
+.fbtns .meta.ok{text-align:center;padding:8px 0}
 .codebox{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:18px;letter-spacing:.04em;padding:14px;border-radius:12px;background:var(--bg);border:1px solid var(--line);text-align:center;user-select:all;-webkit-user-select:all;word-break:break-all}
 .sync{font-size:12px;color:var(--muted);margin:0 4px 12px}
 .linkbtn{background:none;border:none;padding:0;color:var(--accent-ink);text-decoration:underline;font-size:inherit;font-weight:500;cursor:pointer}
@@ -146,6 +188,7 @@ nav.tabs button[aria-current="page"]{color:var(--accent-ink);font-weight:600}
     <button data-tab="week"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Week</button>
     <button data-tab="season"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Season</button>
     <button data-tab="library"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h4v16H4zM10 4h4v16h-4zM16 5l4 1-3 14-4-1z"/></svg>Library</button>
+    <button data-tab="friends"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.2a6.5 6.5 0 0 1 3.5 5.8"/></svg>Friends</button>
   </div>
 </nav>
 <div id="modal"></div>
@@ -159,11 +202,11 @@ nav.tabs button[aria-current="page"]{color:var(--accent-ink);font-weight:600}
 const LS_KEY = 'animeWeek.v1', CACHE_KEY = 'animeWeek.cache.v1', SET_KEY = 'animeWeek.settings.v1';
 function readLS(k){ try { const r = localStorage.getItem(k); return r ? JSON.parse(r) : null; } catch(e){ return null; } }
 function writeLS(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch(e){ return false; } }
-function blank(){ return { v:2, updatedAt:0, shows:[], library:[], watchlist:[] }; }
+function blank(){ return { v:3, updatedAt:0, shows:[], library:[], watchlist:[], log:[], friends:[], share:null }; }
 let state = Object.assign(blank(), readLS(LS_KEY) || {});
 let settings = Object.assign({}, readLS(SET_KEY) || {});
 let cache = Object.assign({ anime:{}, tv:null, movies:null, showsAt:0 }, readLS(CACHE_KEY) || {});
-function save(quiet){ state.updatedAt = Date.now(); if (!writeLS(LS_KEY, state)) toast('Couldn’t save on this device. Download a backup from Settings.'); if (!quiet && typeof markDirty === 'function') markDirty(); }
+function save(quiet){ state.updatedAt = Date.now(); if (!writeLS(LS_KEY, state)) toast('Couldn’t save on this device. Download a backup from Settings.'); if (!quiet){ markDirty(); scheduleAlertUpdate(); schedulePublish(); } }
 function saveCache(){ writeLS(CACHE_KEY, cache); }
 function saveSettings(){ writeLS(SET_KEY, settings); }
 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch(e){}
@@ -280,7 +323,7 @@ async function anilist(query, variables){
   if (!j || !j.data) throw new Error('AniList ' + r.status);
   return j.data;
 }
-const A_FIELDS = 'id title{romaji english} episodes status startDate{year month day} nextAiringEpisode{airingAt episode} coverImage{medium large} externalLinks{site}';
+const A_FIELDS = 'id title{romaji english} episodes status startDate{year month day} nextAiringEpisode{airingAt episode} coverImage{medium large} externalLinks{site} genres';
 const SEQUEL_RE = /(season\s*\d|\b\d+(st|nd|rd|th)\s+season|\bpart\s*\d|\bcour\s*\d|\b(ii|iii|iv)\b|\b2nd\b|\b3rd\b)/i;
 function mapAnime(m, cont){
   const t = (m.title.english || m.title.romaji || '').trim();
@@ -288,7 +331,7 @@ function mapAnime(m, cont){
   return { id:m.id, t, alt:m.title.romaji || '', k: cont ? 'Continuing' : (SEQUEL_RE.test(t + ' ' + (m.title.romaji||'')) ? 'Returning' : 'New'),
     eps:m.episodes || null, status:m.status, at: m.nextAiringEpisode ? m.nextAiringEpisode.airingAt * 1000 : null,
     next: m.nextAiringEpisode ? m.nextAiringEpisode.episode : null, cover: m.coverImage ? (m.coverImage.large || m.coverImage.medium) : '', thumb: m.coverImage ? m.coverImage.medium : '',
-    cr: (m.externalLinks || []).some(l => /crunchyroll/i.test(l.site || '')), start: sd };
+    cr: (m.externalLinks || []).some(l => /crunchyroll/i.test(l.site || '')), start: sd, genres: m.genres || [] };
 }
 async function fetchAnimeSeason(so, withContinuing){
   const list = 'type:ANIME,isAdult:false,format_in:[TV,TV_SHORT,ONA],sort:POPULARITY_DESC';
@@ -361,7 +404,7 @@ async function tvShowData(s){
   return r.json();
 }
 function applyTV(s, show){
-  s.tvmazeId = show.id; s.linkTitle = show.name;
+  s.tvmazeId = show.id; s.linkTitle = show.name; s.genres = show.genres || [];
   if (!s.cover && show.image) s.cover = String(show.image.medium).replace('http:','https:');
   const eps = ((show._embedded && show._embedded.episodes) || []).filter(e => e.number != null);
   const m = s.title.match(/season\s+(\d+)\s*$/i);
@@ -431,13 +474,14 @@ async function refreshShows(force){
     }
     const ids = anime.filter(s => s.anilistId).map(s => s.anilistId);
     if (ids.length){
-      const d = await anilist('query($ids:[Int]){Page(perPage:50){media(id_in:$ids){id episodes status nextAiringEpisode{airingAt episode} coverImage{medium} title{english romaji}}}}', { ids });
+      const d = await anilist('query($ids:[Int]){Page(perPage:50){media(id_in:$ids){id episodes status nextAiringEpisode{airingAt episode} coverImage{medium} title{english romaji} genres}}}', { ids });
       const byId = {}; (d.Page.media || []).forEach(m => byId[m.id] = m);
       anime.forEach(s => {
         const m = byId[s.anilistId]; if (!m) return;
         const n = m.nextAiringEpisode;
         applyLive(s, { total: m.episodes || null, aired: n ? n.episode - 1 : (m.status === 'FINISHED' ? m.episodes : (m.status === 'NOT_YET_RELEASED' ? 0 : null)), at: n ? n.airingAt * 1000 : null, status: m.status });
         if (!s.cover && m.coverImage) s.cover = m.coverImage.medium;
+        if (m.genres) s.genres = m.genres;
         if (!s.linkTitle) s.linkTitle = m.title.english || m.title.romaji;
       });
     }
@@ -451,6 +495,7 @@ async function refreshShows(force){
   save(true);
   ui.busy.shows = false;
   render();
+  scheduleAlertUpdate(); schedulePublish();
 }
 
 /* ---------- Airing math ---------- */
@@ -479,7 +524,8 @@ function showInfo(s){
       endText = days < 0 ? 'Finished airing' : days < 7 ? 'Finale airs ' + (days === 0 ? 'today' : DAYS_FULL[end.getDay()]) : 'Ends ' + fmtDate(end);
     } else if (!total) endText = 'Add the episode count to see when it ends';
   }
-  return { total, ep, left: total ? Math.max(total - ep, 0) : null, endText, airText,
+  const ended = L ? L.status === 'FINISHED' : endText === 'Finished airing';
+  return { total, ep, aired, ended, left: total ? Math.max(total - ep, 0) : null, endText, airText,
     behind: aired != null ? Math.max(aired - ep, 0) : 0, pct: total ? Math.min(100, Math.round(ep / total * 100)) : 0, finished: total > 0 && ep >= total };
 }
 function sortTime(s){ return s.time || (s.live && s.live.at ? hm(new Date(s.live.at)) : '99'); }
@@ -502,12 +548,12 @@ async function enrichLibrary(){
     const anime = state.library.filter(x => typeOf(x) === 'anime' && !x.coverChecked);
     for (let i = 0; i < anime.length; i += 10){
       const batch = anime.slice(i, i + 10);
-      const q = 'query{' + batch.map((x, n) => 'm' + n + ':Media(search:' + JSON.stringify(libSearchTitle(x.title)) + ',type:ANIME,sort:SEARCH_MATCH){id episodes startDate{year} coverImage{medium}}').join(' ') + '}';
+      const q = 'query{' + batch.map((x, n) => 'm' + n + ':Media(search:' + JSON.stringify(libSearchTitle(x.title)) + ',type:ANIME,sort:SEARCH_MATCH){id episodes startDate{year} coverImage{medium} genres}').join(' ') + '}';
       let d;
       try { d = await anilist(q); } catch(err){ break; }
       batch.forEach((x, n) => {
         const m = d['m' + n];
-        if (m){ x.anilistId = m.id; if (m.coverImage) x.cover = m.coverImage.medium; if (!x.season && m.startDate && m.startDate.year) x.season = String(m.startDate.year); }
+        if (m){ x.anilistId = m.id; x.genres = m.genres || []; if (m.coverImage) x.cover = m.coverImage.medium; if (!x.season && m.startDate && m.startDate.year) x.season = String(m.startDate.year); }
         x.coverChecked = true; changed++;
       });
       done();
@@ -517,7 +563,7 @@ async function enrichLibrary(){
     for (const x of state.library.filter(y => typeOf(y) === 'tv' && !y.coverChecked)){
       try {
         const r = await fetch('https://api.tvmaze.com/singlesearch/shows?q=' + encodeURIComponent(libSearchTitle(x.title)));
-        if (r.ok){ const sh = await r.json(); if (sh.image) x.cover = String(sh.image.medium).replace('http:','https:'); if (!x.season && sh.premiered) x.season = sh.premiered.slice(0,4); x.tvmazeId = sh.id; }
+        if (r.ok){ const sh = await r.json(); if (sh.image) x.cover = String(sh.image.medium).replace('http:','https:'); if (!x.season && sh.premiered) x.season = sh.premiered.slice(0,4); x.tvmazeId = sh.id; x.genres = sh.genres || []; }
         if (r.ok || r.status === 404){ x.coverChecked = true; changed++; }
       } catch(err){ break; }
       await sleep(600);
@@ -656,6 +702,437 @@ function bindSync(sheet){
   });
 }
 
+/* ---------- Watch log, ratings, links ---------- */
+function logEvent(k, title, extra){
+  if (!Array.isArray(state.log)) state.log = [];
+  const now = new Date();
+  state.log.push(Object.assign({ d: ymd(now), w: now.getDay(), k, t: title }, extra || {}));
+  if (state.log.length > 6000) state.log = state.log.slice(-6000);
+}
+function stars(n){ n = Number(n) || 0; return n ? '★'.repeat(n) + '☆'.repeat(5 - n) : ''; }
+const STAR_PATH = '<path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/>';
+function starPicker(cur){
+  return '<div class="stars-pick" role="group" aria-label="Rating">' + [1,2,3,4,5].map(n =>
+    '<button type="button" class="starbtn' + (n <= cur ? ' on' : '') + '" data-rate="' + n + '" aria-label="' + n + ' star' + (n > 1 ? 's' : '') + '" aria-pressed="' + (n === cur) + '"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true">' + STAR_PATH + '</svg></button>').join('') + '</div>';
+}
+function bindStars(sheet, getSet){
+  sheet.querySelectorAll('[data-rate]').forEach(b => b.addEventListener('click', ev => {
+    ev.stopPropagation();
+    const n = Number(b.dataset.rate), v = getSet() === n ? 0 : n;
+    getSet(v);
+    sheet.querySelectorAll('[data-rate]').forEach(x => { const k = Number(x.dataset.rate); x.classList.toggle('on', k <= v); x.setAttribute('aria-pressed', String(k === v)); });
+  }));
+}
+function baseTitle(t){ return searchTitle(t).replace(/\s+season\s+\d+\s*$/i, '').trim(); }
+function watchLink(x, type){
+  const t = encodeURIComponent(baseTitle(x.linkTitle || x.title || x.t || ''));
+  return type === 'anime' ? 'https://www.crunchyroll.com/search?q=' + t : 'https://www.justwatch.com/ca/search?q=' + t;
+}
+function watchLabel(type){ return type === 'anime' ? 'Watch on Crunchyroll' : 'Where to watch'; }
+const ICON_PLAY = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>';
+const ICON_CHART = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>';
+
+function rateSheet(x, lead){
+  let val = Number(x.rating) || 0;
+  openSheet(
+    '<h2>How was ' + esc(x.title) + '?</h2>' + (lead ? '<p class="meta" style="margin:0">' + esc(lead) + '</p>' : '') + starPicker(val) +
+    '<div class="field"><label for="r-note">A quick note (optional)</label><textarea id="r-note" class="note-in" placeholder="What stood out?">' + esc(x.note || '') + '</textarea></div>' +
+    '<div class="actions"><button class="btn ghost" data-close="1">Skip</button><button class="btn" id="r-save">Save</button></div>',
+    sheet => {
+      bindStars(sheet, v => v === undefined ? val : (val = v));
+      $('#r-save', sheet).addEventListener('click', () => { x.rating = val || null; x.note = $('#r-note', sheet).value.trim(); save(); closeSheet(); render(); });
+    }
+  );
+}
+
+/* ---------- New since you last checked ---------- */
+function newEps(s, i){
+  i = i || showInfo(s);
+  if (i.aired == null || s.seen == null) return 0;
+  return Math.max(0, i.aired - Math.max(Number(s.seen) || 0, i.ep));
+}
+function markSeen(){
+  let changed = false;
+  state.shows.forEach(s => { const i = showInfo(s); if (i.aired != null && s.seen !== i.aired){ s.seen = i.aired; changed = true; } });
+  if (changed) save(true);
+}
+
+/* ---------- Season wrap-up ---------- */
+function endedShows(){ return state.shows.filter(s => !s.backlog && showInfo(s).ended); }
+function endedKey(){ return endedShows().map(s => s.id).sort().join(','); }
+function moveToLibrary(s, status){
+  const i = showInfo(s), typ = typeOf(s);
+  const existing = state.library.find(x => typeOf(x) === typ && norm(x.title) === norm(s.title));
+  const entry = { season: seasonLabel(CUR), eps: i.total || s.ep || null, fav: !!s.fav, status, doneAt: Date.now(),
+    genres: (s.genres && s.genres.length) ? s.genres : ((existing && existing.genres) || []) };
+  if (s.cover){ entry.cover = s.cover; entry.coverChecked = true; }
+  let target;
+  if (existing){ Object.assign(existing, entry); target = existing; }
+  else { target = Object.assign({ id: uid(), type: typ, title: s.title }, entry); state.library.push(target); }
+  state.shows = state.shows.filter(x => x.id !== s.id);
+  logEvent('done', s.title, { ty: typ, st: status });
+  return target;
+}
+function wrapSheet(){
+  const list = endedShows();
+  if (!list.length){ toast('Nothing on your week has finished airing yet.'); return; }
+  openSheet(
+    '<h2>Season wrap-up</h2><p class="meta" style="margin:0">These shows have finished airing. Choose what happens to each one.</p>' +
+    list.map(s => {
+      const i = showInfo(s), caught = i.total && i.ep >= i.total;
+      return '<div class="wraprow">' + tile(s.title, s.cover) + '<div class="info"><span class="name">' + esc(s.title) + '</span>' +
+        '<span class="meta">' + esc(caught ? 'All ' + i.total + ' watched' : 'Watched ' + i.ep + (i.total ? ' of ' + i.total : '')) + '</span>' +
+        '<label class="vh" for="w-' + s.id + '">What to do with ' + esc(s.title) + '</label>' +
+        '<select id="w-' + s.id + '" data-wrap="' + s.id + '"><option value="completed"' + (caught ? ' selected' : '') + '>Move to library as completed</option>' +
+        '<option value="dropped">Move to library as dropped</option><option value="keep"' + (caught ? '' : ' selected') + '>Keep on my week</option></select></div></div>';
+    }).join('') +
+    '<div class="actions"><button class="btn ghost" data-close="1">Cancel</button><button class="btn" id="w-go">Wrap up</button></div>',
+    sheet => {
+      $('#w-go', sheet).addEventListener('click', () => {
+        let moved = 0;
+        sheet.querySelectorAll('[data-wrap]').forEach(sel => {
+          if (sel.value === 'keep') return;
+          const s = state.shows.find(x => x.id === sel.dataset.wrap);
+          if (s){ moveToLibrary(s, sel.value); moved++; }
+        });
+        settings.wrapSeen = endedKey(); saveSettings();
+        save(); closeSheet(); render();
+        toast(moved ? moved + ' show' + (moved === 1 ? '' : 's') + ' moved to your library. Rate them there whenever you like.' : 'Nothing moved.');
+      });
+    }
+  );
+}
+
+/* ---------- Year in review ---------- */
+const EP_MIN = { anime: 24, tv: 45 };
+function yearSheet(year){
+  const log = Array.isArray(state.log) ? state.log : [];
+  const cur = String(new Date().getFullYear());
+  const years = [...new Set([cur, ...log.map(e => e.d.slice(0, 4))])].sort().reverse();
+  year = String(year || cur);
+  const L = log.filter(e => e.d.startsWith(year));
+  const eps = L.filter(e => e.k === 'ep'), done = L.filter(e => e.k === 'done' && e.st !== 'dropped'), movies = L.filter(e => e.k === 'movie');
+  const minutes = eps.reduce((a, e) => a + (EP_MIN[e.ty] || 24), 0) + movies.length * 120;
+  const hours = Math.round(minutes / 60), hoursText = minutes && minutes < 60 ? 'Under 1' : '~' + hours;
+  const byShow = {}; eps.forEach(e => byShow[e.t] = (byShow[e.t] || 0) + 1);
+  const topShow = Object.entries(byShow).sort((a, b) => b[1] - a[1])[0];
+  const days = [0,0,0,0,0,0,0]; eps.forEach(e => days[e.w]++);
+  const busiest = eps.length ? DAYS_FULL[days.indexOf(Math.max(...days))] : '';
+  const gmap = {}; [...state.library, ...state.shows].forEach(x => { if (x.genres && x.genres.length) gmap[norm(x.title)] = x.genres; });
+  const gcount = {}; [...eps, ...done].forEach(e => (gmap[norm(e.t)] || []).forEach(g => gcount[g] = (gcount[g] || 0) + 1));
+  const topGenres = Object.entries(gcount).sort((a, b) => b[1] - a[1]).slice(0, 3).map(x => x[0]);
+  const best = state.library.filter(x => x.doneAt && String(new Date(x.doneAt).getFullYear()) === year && Number(x.rating) >= 4).sort((a, b) => b.rating - a.rating).slice(0, 3);
+  const first = log.length ? parseDate(log[0].d) : null;
+  const stat = (v, k) => '<div class="ystat"><span class="v">' + esc(v) + '</span><span class="k">' + esc(k) + '</span></div>';
+  let h = '<h2>Your ' + esc(year) + ' in Airday</h2>';
+  if (years.length > 1) h += '<div class="chips" style="margin:0">' + years.map(y => '<button class="chipb' + (y === year ? ' on' : '') + '" aria-pressed="' + (y === year) + '" data-year="' + y + '">' + y + '</button>').join('') + '</div>';
+  if (!L.length){
+    h += '<div class="empty">Nothing logged for ' + esc(year) + ' yet. Every +1, finished show and movie you mark as seen counts toward this.</div>';
+  } else {
+    h += '<div class="ystats">' + stat(eps.length, 'Episodes watched') + stat(hoursText, 'Hours') + stat(done.length, 'Shows finished') + stat(movies.length, 'Movies seen') + '</div>';
+    if (topShow) h += '<p class="yline"><b>Most watched:</b> ' + esc(topShow[0]) + ' (' + topShow[1] + ' episode' + (topShow[1] === 1 ? '' : 's') + ')</p>';
+    if (topGenres.length) h += '<p class="yline"><b>Top genres:</b> ' + esc(topGenres.join(', ')) + '</p>';
+    if (busiest) h += '<p class="yline"><b>Busiest day:</b> ' + busiest + 's</p>';
+    if (best.length) h += '<p class="yline"><b>Highest rated:</b> ' + best.map(x => esc(x.title) + ' <span class="stars">' + stars(x.rating) + '</span>').join(', ') + '</p>';
+  }
+  if (first) h += '<p class="meta" style="margin:0">Counting from ' + fmtDate(first) + ', ' + first.getFullYear() + ', when you started tracking in Airday.</p>';
+  h += '<div class="actions">' + (L.length ? '<button class="btn" id="y-share">Share</button>' : '') + '<button class="btn ghost" data-close="1">Close</button></div>';
+  const text = 'My ' + year + ' in Airday: ' + eps.length + ' episodes, ' + done.length + ' shows finished, ' + movies.length + ' movies, ' + (hours ? 'about ' + hours + ' hours' : 'under an hour') + '.' +
+    (topShow ? ' Most watched: ' + topShow[0] + '.' : '') + (topGenres.length ? ' Top genres: ' + topGenres.join(', ') + '.' : '') + ' ' + SITE;
+  openSheet(h, sheet => {
+    const b = $('#y-share', sheet);
+    if (b) b.addEventListener('click', () => shareText(text, 'Copied. Paste it anywhere to share.'));
+  });
+}
+async function shareText(text, copied, url){
+  try {
+    if (navigator.share){ await navigator.share(url ? { title:'Airday', text, url } : { title:'Airday', text }); return; }
+  } catch(e){ if (e && e.name === 'AbortError') return; }
+  try { await navigator.clipboard.writeText(url ? text + ' ' + url : text); toast(copied); } catch(e){ toast('Couldn’t copy. Press and hold to copy it instead.'); }
+}
+
+/* ---------- Episode alerts ---------- */
+function alertsSupported(){ return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window; }
+function b64urlToBytes(v){ const s = v.replace(/-/g, '+').replace(/_/g, '/'); const bin = atob(s + '='.repeat((4 - s.length % 4) % 4)); return Uint8Array.from(bin, c => c.charCodeAt(0)); }
+function alertShows(){
+  return state.shows.slice(0, 150).map(s => {
+    const off = Number(s.epOffset) || 0;
+    return { a: s.anilistId || 0, t: s.title, o: off, v: (!s.anilistId && s.live && s.live.at) ? s.live.at : 0, n: (s.live && s.live.aired != null) ? s.live.aired + 1 + off : 0 };
+  });
+}
+var alertTimer = null;
+function scheduleAlertUpdate(){ if (!settings.alerts || !relayOn()) return; clearTimeout(alertTimer); alertTimer = setTimeout(sendAlertShows, 5000); }
+async function currentSub(){
+  if (!alertsSupported()) return null;
+  const reg = await navigator.serviceWorker.getRegistration();
+  return reg ? reg.pushManager.getSubscription() : null;
+}
+async function sendAlertShows(){
+  try {
+    const sub = await currentSub();
+    if (!sub){ settings.alerts = false; saveSettings(); return; }
+    const shows = alertShows(), hash = JSON.stringify(shows);
+    if (hash === settings.alertsHash) return;
+    const r = await syncFetch('POST', '/push/subscribe', { sub: sub.toJSON(), shows });
+    if (r.status === 200){ settings.alertsHash = hash; saveSettings(); }
+  } catch(e){}
+}
+async function turnOnAlerts(){
+  if (!alertsSupported()) throw new Error('unsupported');
+  const perm = await Notification.requestPermission();
+  if (perm !== 'granted') throw new Error('denied');
+  const k = await syncFetch('GET', '/push/key');
+  if (k.status !== 200 || !k.j || !k.j.key) throw new Error('key');
+  const reg = await navigator.serviceWorker.ready;
+  let sub = await reg.pushManager.getSubscription();
+  if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64urlToBytes(k.j.key) });
+  const shows = alertShows();
+  const r = await syncFetch('POST', '/push/subscribe', { sub: sub.toJSON(), shows });
+  if (r.status !== 200) throw new Error('save');
+  settings.alerts = true; settings.alertsHash = JSON.stringify(shows); saveSettings();
+}
+async function turnOffAlerts(){
+  try { const sub = await currentSub(); if (sub){ await syncFetch('POST', '/push/unsubscribe', { endpoint: sub.endpoint }); await sub.unsubscribe(); } } catch(e){}
+  settings.alerts = false; settings.alertsHash = ''; saveSettings();
+}
+function alertsSection(){
+  if (!relayOn()) return '';
+  let body;
+  if (!alertsSupported()) body = '<p class="meta" style="margin:0">This browser can’t show alerts. On iPhone, add Airday to your home screen and open it from there first.</p>';
+  else if (settings.alerts) body = '<p class="meta" style="margin:0">On for this device. You’ll get a notification when a new episode of a show on your week comes out.</p>' +
+    '<div class="actions"><button class="btn ghost" id="a-test">Send a test</button><button class="btn danger" id="a-off">Turn off</button></div>';
+  else body = '<p class="meta" style="margin:0">Get a notification on this device when a new episode of a show on your week comes out.</p><div class="actions"><button class="btn" id="a-on">Turn on alerts</button></div>';
+  return '<h2 style="margin-top:4px">Episode alerts</h2>' + body;
+}
+function bindAlerts(sheet){
+  const on = $('#a-on', sheet);
+  if (on) on.addEventListener('click', async () => {
+    on.disabled = true; on.textContent = 'Turning on…';
+    try { await turnOnAlerts(); settingsSheet(); toast('Alerts are on for this device.'); }
+    catch(e){ on.disabled = false; on.textContent = 'Turn on alerts'; toast(e.message === 'denied' ? 'Notifications are blocked. Allow them for Airday in your phone or browser settings, then try again.' : 'Couldn’t turn on alerts. Try again in a moment.'); }
+  });
+  const off = $('#a-off', sheet);
+  if (off) off.addEventListener('click', async () => { await turnOffAlerts(); settingsSheet(); toast('Alerts are off for this device.'); });
+  const test = $('#a-test', sheet);
+  if (test) test.addEventListener('click', async () => {
+    try { const sub = await currentSub(); const r = await syncFetch('POST', '/push/test', { endpoint: sub ? sub.endpoint : '' }); toast(r.status === 200 ? 'Test sent. It should arrive in a few seconds.' : 'Couldn’t send a test. Try turning alerts off and on again.'); }
+    catch(e){ toast('Couldn’t send a test.'); }
+  });
+}
+
+/* ---------- Friends ---------- */
+const SITE = 'https://airday.pages.dev/';
+ui.friendData = {};
+function shareData(){
+  return {
+    shows: state.shows.slice(0, 60).map(s => { const i = showInfo(s); return { t: s.title, c: s.cover || '', a: s.anilistId || 0, m: s.tvmazeId || 0, ty: typeOf(s), n: i.finished ? 0 : i.ep + 1, tot: i.total || 0, f: s.fav ? 1 : 0, d: (s.day == null || s.day === '') ? -1 : s.day, k: s.isNew ? 1 : 0 }; }),
+    movies: state.watchlist.slice(0, 30).map(m => ({ t: m.title, c: m.cover || '', d: m.date || '' }))
+  };
+}
+var pubTimer = null;
+function schedulePublish(){ if (!state.share || !relayOn()) return; clearTimeout(pubTimer); pubTimer = setTimeout(publishShare, 8000); }
+async function publishShare(){
+  if (!state.share) return;
+  const data = JSON.stringify(shareData());
+  if (data === ui.lastPub) return;
+  try { const r = await syncFetch('PUT', '/share/' + state.share.id, { token: state.share.token, name: state.share.name, data }); if (r.status === 200) ui.lastPub = data; } catch(e){}
+}
+function parseFriendId(v){
+  const s = String(v || '').trim();
+  const m = s.match(/[#&?]f=([A-Za-z0-9]{8})\b/) || s.match(/^([A-Za-z0-9]{8})$/);
+  return m ? m[1].toUpperCase() : '';
+}
+async function loadFriend(id, force){
+  const f = ui.friendData[id];
+  if (f && f.loading) return;
+  if (!force && f && Date.now() - f.at < 10 * 60000) return;
+  ui.friendData[id] = Object.assign({}, f, { loading: true, at: (f && f.at) || 0 });
+  try {
+    const r = await syncFetch('GET', '/share/' + id);
+    if (r.status === 200) ui.friendData[id] = { at: Date.now(), name: r.j.name, data: JSON.parse(r.j.data || '{}'), updatedAt: r.j.updatedAt };
+    else ui.friendData[id] = { at: Date.now(), gone: r.status === 404, err: true };
+  } catch(e){ ui.friendData[id] = Object.assign({}, f, { loading: false, err: true, at: Date.now() }); }
+  if (ui.tab === 'friends') render();
+}
+function friendsView(){
+  let h = '<div class="top"><div><div class="sub">See what your friends are watching</div><h1>Friends</h1></div></div>';
+  if (!relayOn()) return h + '<div class="empty">Friends needs the Airday relay to be set up.</div>';
+  const sh = state.share;
+  if (sh){
+    h += '<div class="panel"><h2>Your share link</h2><p class="meta" style="margin:0">Friends with this link see the shows on your week and your movie list, under the name ' + esc(sh.name) + '. Your library stays private.</p>' +
+      '<div class="codebox small">' + esc(SITE + '#f=' + sh.id) + '</div>' +
+      '<div class="actions"><button class="btn" data-act="share-link">Share link</button><button class="btn ghost" data-act="share-stop">Stop sharing</button></div></div>';
+  } else {
+    h += '<div class="panel"><h2>Share what you’re watching</h2><p class="meta" style="margin:0">Get a link to send friends. They’ll see the shows on your week and your movie list. Your library stays private.</p>' +
+      '<div class="field"><label for="sh-name">Your name, as friends will see it</label><input id="sh-name" maxlength="30" placeholder="e.g. Nick" autocomplete="nickname"></div>' +
+      '<div class="actions"><button class="btn" data-act="share-start">Start sharing</button></div></div>';
+  }
+  h += '<div class="panel"><h2>Add a friend</h2><div class="field"><label for="fr-in">Paste their link or code</label><input id="fr-in" autocomplete="off" spellcheck="false" placeholder="https://airday.pages.dev/#f=…"></div>' +
+    '<div class="actions"><button class="btn ghost" data-act="friend-add">Add friend</button></div></div>';
+  const friends = state.friends || [];
+  if (!friends.length) h += '<div class="empty">No friends added yet. When a friend sends you their Airday link, open it or paste it here.</div>';
+  friends.forEach(fr => {
+    loadFriend(fr.id);
+    const fd = ui.friendData[fr.id] || {}, name = fd.name || fr.name;
+    h += '<div class="friend"><div class="fhead"><div><h2>' + esc(name) + '</h2><span class="meta">' +
+      (fd.gone ? 'Stopped sharing' : fd.updatedAt ? 'Updated ' + ago(fd.updatedAt) : fd.err ? 'Couldn’t load right now' : 'Loading…') + '</span></div>' +
+      '<button class="linkbtn" data-frdel="' + fr.id + '">Remove</button></div>';
+    if (fd.data){
+      const shows = fd.data.shows || [];
+      h += shows.length ? '<div class="frlist">' + shows.map((x, n) => {
+        const mine = state.shows.some(s => (x.a && s.anilistId === x.a) || (x.m && s.tvmazeId === x.m) || norm(s.title) === norm(x.t));
+        const meta = (x.d >= 0 ? DAYS_FULL[x.d] + 's, ' : '') + (x.n ? 'on ep ' + x.n + (x.tot ? ' of ' + x.tot : '') : 'all caught up');
+        return '<div class="card">' + tile(x.t, x.c) + '<div class="cardmain"><span class="ttl"><span>' + esc(x.t) + '</span>' + (x.f ? '<span class="tag fav">FAVORITE</span>' : '') + '</span>' +
+          '<span class="meta">' + esc(meta) + '</span></div>' +
+          (mine ? '<span class="meta" style="padding:0 6px;text-align:right">On your week</span>' : '<button class="btn ghost small" data-fradd="' + fr.id + ':' + n + '" aria-label="Add ' + esc(x.t) + ' to my week">Add</button>') + '</div>';
+      }).join('') + '</div>' : '<p class="meta" style="margin:0">Nothing on their week right now.</p>';
+      const mv = fd.data.movies || [];
+      if (mv.length) h += '<p class="meta" style="margin:10px 2px 0">Movies on their list: ' + esc(mv.map(m => m.t).join(', ')) + '</p>';
+    }
+    h += '</div>';
+  });
+  return h;
+}
+async function handleInvite(){
+  const id = parseFriendId(location.hash);
+  if (!id) return;
+  try { history.replaceState(null, '', location.pathname + location.search); } catch(e){}
+  if (!relayOn() || (state.share && state.share.id === id)) return;
+  if ((state.friends || []).some(f => f.id === id)){ ui.tab = 'friends'; render(); return; }
+  try {
+    const r = await syncFetch('GET', '/share/' + id);
+    if (r.status !== 200){ toast('That share link isn’t active anymore.'); return; }
+    if (!confirm('Add ' + r.j.name + ' as a friend on Airday? You’ll see what they’re watching.')) return;
+    state.friends = state.friends || []; state.friends.push({ id, name: r.j.name }); save();
+    ui.tab = 'friends'; render(); toast('Added ' + r.j.name);
+  } catch(e){ toast('Couldn’t open that share link. Check your connection.'); }
+}
+async function friendAction(act){
+  if (act === 'share-start'){
+    const name = ($('#sh-name') || {}).value ? $('#sh-name').value.trim() : '';
+    if (!name){ toast('Add your name first.'); const el = $('#sh-name'); if (el) el.focus(); return; }
+    const data = JSON.stringify(shareData());
+    const r = await syncFetch('POST', '/share', { name, data }).catch(() => ({ status: 0 }));
+    if (r.status !== 200 || !r.j || !r.j.id){ toast('Couldn’t start sharing. Try again in a moment.'); return; }
+    state.share = { id: r.j.id, token: r.j.token, name }; ui.lastPub = data; save(); render();
+    shareText(name + ' is sharing what they watch on Airday:', 'Link copied. Send it to your friends.', SITE + '#f=' + r.j.id);
+  }
+  if (act === 'share-link' && state.share) shareText(state.share.name + ' is sharing what they watch on Airday:', 'Link copied. Send it to your friends.', SITE + '#f=' + state.share.id);
+  if (act === 'share-stop' && state.share){
+    if (!confirm('Stop sharing? Friends who have your link will no longer see your list.')) return;
+    await syncFetch('POST', '/share/' + state.share.id + '/delete', { token: state.share.token }).catch(() => {});
+    state.share = null; ui.lastPub = ''; save(); render(); toast('Sharing stopped.');
+  }
+  if (act === 'friend-add'){
+    const el = $('#fr-in'), id = parseFriendId(el ? el.value : '');
+    if (!id){ toast('Paste the link your friend sent, or their 8-character code.'); return; }
+    if (state.share && state.share.id === id){ toast('That’s your own link.'); return; }
+    if ((state.friends || []).some(f => f.id === id)){ toast('They’re already on your list.'); return; }
+    const r = await syncFetch('GET', '/share/' + id).catch(() => ({ status: 0 }));
+    if (r.status === 404){ toast('No one is sharing with that link.'); return; }
+    if (r.status !== 200){ toast('Couldn’t check that link. Try again in a moment.'); return; }
+    state.friends = state.friends || []; state.friends.push({ id, name: r.j.name });
+    ui.friendData[id] = { at: Date.now(), name: r.j.name, data: JSON.parse(r.j.data || '{}'), updatedAt: r.j.updatedAt };
+    save(); render(); toast('Added ' + r.j.name);
+  }
+}
+
+/* ---------- Find any title (old or new) ---------- */
+const finder = { type: 'anime', ctx: 'library', q: '', results: [], token: 0, timer: null };
+async function findTitles(type, q){
+  if (type === 'anime'){
+    const d = await anilist('query($q:String){Page(perPage:15){media(search:$q,type:ANIME,isAdult:false,sort:SEARCH_MATCH){id title{english romaji} episodes status format startDate{year} coverImage{medium} genres nextAiringEpisode{airingAt episode}}}}', { q });
+    return (d.Page.media || []).map(m => ({ type:'anime', id:m.id, t:(m.title.english || m.title.romaji || '').trim(), year: m.startDate && m.startDate.year ? String(m.startDate.year) : '',
+      eps:m.episodes || null, status:m.status, fmt:m.format, cover: m.coverImage ? m.coverImage.medium : '', genres:m.genres || [], next:m.nextAiringEpisode }));
+  }
+  if (type === 'tv'){
+    const r = await fetch('https://api.tvmaze.com/search/shows?q=' + encodeURIComponent(q));
+    if (!r.ok) throw new Error('tv');
+    return (await r.json()).slice(0, 15).map(x => { const s = x.show; return { type:'tv', id:s.id, t:s.name, year: s.premiered ? s.premiered.slice(0,4) : '',
+      where: (s.webChannel && s.webChannel.name) || (s.network && s.network.name) || '', status: s.status === 'Ended' ? 'FINISHED' : (s.status === 'Running' ? 'RELEASING' : 'NOT_YET_RELEASED'),
+      cover: s.image ? String(s.image.medium).replace('http:','https:') : '', genres: s.genres || [] }; });
+  }
+  if (!relayOn()) throw new Error('relay');
+  const r = await fetch(MOVIES_RELAY + '/search?all=1&q=' + encodeURIComponent(q));
+  if (!r.ok) throw new Error('movie');
+  const j = await r.json();
+  return (j.results || (j.result ? [j.result] : [])).slice(0, 15).map(m => ({ type:'movie', id:m.id, t:m.title, year:(m.date || '').slice(0,4), date:m.date || '',
+    cover: m.poster ? 'https://image.tmdb.org/t/p/w185' + m.poster : '' }));
+}
+function inLibrary(x){ return state.library.some(y => typeOf(y) === x.type && ((x.type === 'anime' && y.anilistId === x.id) || (x.type === 'tv' && y.tvmazeId === x.id) || (x.type === 'movie' && y.tmdbId === x.id) || norm(y.title) === norm(x.t))); }
+function onWeek(x){ return state.shows.some(s => (x.type === 'anime' && s.anilistId === x.id) || (x.type === 'tv' && s.tvmazeId === x.id) || norm(s.title) === norm(x.t)); }
+function onList(x){ return state.watchlist.some(m => norm(m.title) === norm(x.t)); }
+function renderFind(){
+  if (!finder.results.length) return '<p class="meta" style="margin:4px 2px">No matches. Try a shorter or different title.</p>';
+  return '<div class="frlist">' + finder.results.map((x, n) => {
+    const meta = [x.year, x.type === 'anime' ? [x.eps ? x.eps + ' eps' : '', x.fmt === 'MOVIE' ? 'Movie' : ''].filter(Boolean).join(', ') : x.where,
+      x.status === 'RELEASING' ? 'Airing now' : x.status === 'NOT_YET_RELEASED' ? 'Coming soon' : ''].filter(Boolean).join(', ');
+    const first = inLibrary(x) ? '<span class="meta ok">In your library</span>' : '<button class="btn small" data-fw="' + n + '">Watched</button>';
+    const second = x.type === 'movie'
+      ? (onList(x) ? '<span class="meta ok">On your list</span>' : '<button class="btn ghost small" data-fl="' + n + '">Want to watch</button>')
+      : (onWeek(x) ? '<span class="meta ok">On your week</span>' : '<button class="btn ghost small" data-fs="' + n + '">Start watching</button>');
+    return '<div class="card fres">' + tile(x.t, x.cover) + '<div class="cardmain"><span class="ttl"><span class="wrap">' + esc(x.t) + '</span></span><span class="meta">' + esc(meta) + '</span></div><div class="fbtns">' + first + second + '</div></div>';
+  }).join('') + '</div>';
+}
+function findSheet(type, ctx){
+  finder.type = type || 'anime'; finder.ctx = ctx || 'library'; finder.q = ''; finder.results = []; finder.token++;
+  const segs = [['anime','Anime'],['tv','TV'],['movie','Movies']].map(([k,l]) => '<button type="button" data-ftype="' + k + '" aria-pressed="' + (k === finder.type) + '">' + l + '</button>').join('');
+  openSheet(
+    '<h2>Find a title</h2><p class="meta" style="margin:0">Search anything, old or new. Mark it as watched to build your library, or start watching it.</p>' +
+    '<div class="seg" role="group" aria-label="What to search" style="margin:0">' + segs + '</div>' +
+    '<label class="vh" for="f-q">Title</label><input id="f-q" class="search" style="margin:0" type="search" autocomplete="off" placeholder="e.g. Underworld">' +
+    '<div id="f-res"><p class="meta" style="margin:4px 2px">Type a title to search.</p></div>' +
+    '<p class="meta" style="margin:0">Can’t find it? <button class="linkbtn" id="f-manual">Add it by hand</button></p>' +
+    '<div class="actions"><button class="btn ghost" data-close="1">Done</button></div>',
+    sheet => {
+      const input = $('#f-q', sheet), res = $('#f-res', sheet);
+      input.focus();
+      const run = async () => {
+        const q = finder.q.trim(), token = ++finder.token;
+        if (q.length < 2){ res.innerHTML = '<p class="meta" style="margin:4px 2px">Type a title to search.</p>'; return; }
+        res.innerHTML = '<p class="meta" style="margin:4px 2px">Searching…</p>';
+        try { const list = await findTitles(finder.type, q); if (token !== finder.token) return; finder.results = list; res.innerHTML = renderFind(); }
+        catch(e){ if (token === finder.token) res.innerHTML = '<p class="meta" style="margin:4px 2px">' + (e.message === 'relay' ? 'Movie search isn’t switched on yet.' : 'Couldn’t search right now. Check your connection and try again.') + '</p>'; }
+      };
+      input.addEventListener('input', () => { finder.q = input.value; clearTimeout(finder.timer); finder.timer = setTimeout(run, 400); });
+      input.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); clearTimeout(finder.timer); run(); } });
+      sheet.querySelectorAll('[data-ftype]').forEach(b => b.addEventListener('click', ev => {
+        ev.stopPropagation(); finder.type = b.dataset.ftype;
+        sheet.querySelectorAll('[data-ftype]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+        input.placeholder = finder.type === 'movie' ? 'e.g. Underworld' : finder.type === 'tv' ? 'e.g. The Expanse' : 'e.g. Fullmetal Alchemist';
+        run(); input.focus();
+      }));
+      $('#f-manual', sheet).addEventListener('click', ev => {
+        ev.stopPropagation(); const t = finder.type;
+        if (finder.ctx === 'library') libSheet({ id: uid(), type: t, title: finder.q.trim(), season:'', eps:null, status:'completed', fav:false }, true);
+        else if (t === 'movie') movieSheet();
+        else showSheet({ id: uid(), type: t, title: finder.q.trim(), day: null, time:'', ep:0, total:null, premiere:'', isNew:false, fav:false }, true);
+      });
+      res.addEventListener('click', ev => {
+        const b = ev.target.closest('button'); if (!b) return;
+        ev.stopPropagation();
+        const x = finder.results[Number(b.dataset.fw ?? b.dataset.fl ?? b.dataset.fs)]; if (!x) return;
+        if (b.dataset.fw != null){
+          const entry = { id: uid(), type: x.type, title: x.t, season: x.year || '', eps: x.eps || null, fav:false, status:'completed', cover: x.cover || '', coverChecked: true, genres: x.genres || [] };
+          if (x.type === 'anime') entry.anilistId = x.id; else if (x.type === 'tv') entry.tvmazeId = x.id; else entry.tmdbId = x.id;
+          state.library.push(entry); save(); res.innerHTML = renderFind(); toast('Added ' + x.t + ' to your library');
+        } else if (b.dataset.fl != null){
+          state.watchlist.push({ id: uid(), title: x.t, date: x.date || '', where: '', cover: x.cover || '' });
+          save(); res.innerHTML = renderFind(); toast('Added ' + x.t + ' to your movie list');
+        } else {
+          const n = x.next, finished = x.status === 'FINISHED', at = n ? new Date(n.airingAt * 1000) : null;
+          const s = { id: uid(), type: x.type, title: x.t, cover: x.cover || '', genres: x.genres || [], day: at ? at.getDay() : null, time: at ? hm(at) : '',
+            ep:0, total:null, premiere:'', isNew:false, fav:false, backlog: finished };
+          if (x.type === 'anime'){ s.anilistId = x.id; s.linkTitle = x.t; s.epOffset = 0; s.live = { total: x.eps, aired: n ? n.episode - 1 : (finished ? x.eps : 0), at: n ? n.airingAt * 1000 : null, status: x.status }; }
+          else s.tvmazeId = x.id;
+          showSheet(s, true);
+        }
+        if (ui.tab === 'library' || ui.tab === 'week') render();
+      });
+    }
+  );
+}
+
 /* ---------- Views ---------- */
 function render(){
   document.querySelectorAll('nav.tabs button').forEach(b => {
@@ -663,7 +1140,10 @@ function render(){
   });
   const v = $('#view');
   const active = document.activeElement && document.activeElement.id;
-  v.innerHTML = ui.tab === 'week' ? weekView() : ui.tab === 'season' ? seasonView() : libraryView();
+  const keep = {}; ['fr-in','sh-name'].forEach(id => { const el = document.getElementById(id); if (el) keep[id] = el.value; });
+  v.innerHTML = ui.tab === 'week' ? weekView() : ui.tab === 'season' ? seasonView() : ui.tab === 'friends' ? friendsView() : libraryView();
+  Object.keys(keep).forEach(id => { const el = document.getElementById(id); if (el) el.value = keep[id]; });
+  if (active === 'fr-in' || active === 'sh-name'){ const el = document.getElementById(active); if (el) el.focus(); }
   if (active === 'sq' || active === 'lq'){ const el = document.getElementById(active); if (el){ el.focus(); const n = el.value.length; try { el.setSelectionRange(n, n); } catch(_){} } }
 }
 
@@ -676,12 +1156,19 @@ function weekView(){
   const td = new Date().getDay();
   const dayShows = shows.filter(s => s.day === ui.day).sort((a,b) => sortTime(a).localeCompare(sortTime(b)));
   const unset = shows.filter(s => s.day == null || s.day === '');
+  const infos = {}; shows.forEach(s => infos[s.id] = showInfo(s));
+  const newDays = [0,0,0,0,0,0,0]; let newTotal = 0;
+  shows.forEach(s => { const n = newEps(s, infos[s.id]); newTotal += n; if (n && s.day != null && s.day !== '') newDays[s.day] += n; });
+  const ended = shows.filter(s => !s.backlog && infos[s.id].ended);
   let h = '<div class="top"><div><div class="sub">' + esc(seasonLabel(CUR)) + '</div><h1>This week</h1></div>' +
     '<div style="display:flex;gap:8px"><button class="iconbtn" data-act="settings" aria-label="Settings">' + ICON_GEAR + '</button>' +
-    '<button class="iconbtn" data-act="add-show" aria-label="Add a show">' + ICON_PLUS + '</button></div></div>';
+    '<button class="iconbtn" data-act="add-show" aria-label="Find a show to add">' + ICON_PLUS + '</button></div></div>';
   h += '<div class="days" role="tablist" aria-label="Day of the week">' + DAYS.map((d,i) =>
-    '<button role="tab" aria-selected="' + (i===ui.day) + '" class="day' + (i===ui.day?' on':'') + (i===td?' today':'') + '" data-day="' + i + '" aria-label="' + DAYS_FULL[i] + ', ' + counts[i] + ' shows' + (i===td?', today':'') + '"><span class="l">' + d + '</span><span class="n">' + counts[i] + '</span></button>'
+    '<button role="tab" aria-selected="' + (i===ui.day) + '" class="day' + (i===ui.day?' on':'') + (i===td?' today':'') + (newDays[i]?' hasnew':'') + '" data-day="' + i + '" aria-label="' + DAYS_FULL[i] + ', ' + counts[i] + ' shows' + (newDays[i] ? ', ' + newDays[i] + ' new episodes' : '') + (i===td?', today':'') + '"><span class="l">' + d + '</span><span class="n">' + counts[i] + '</span></button>'
   ).join('') + '</div>';
+  if (newTotal) h += '<div class="banner hot"><div><b>' + newTotal + ' new episode' + (newTotal === 1 ? '' : 's') + '</b> since you last checked. Days with new episodes have a dot.</div></div>';
+  if (ended.length && settings.wrapSeen !== endedKey()) h += '<div class="banner"><div><b>' + ended.length + ' show' + (ended.length === 1 ? ' has' : 's have') + ' finished airing.</b> Wrap ' + (ended.length === 1 ? 'it' : 'them') + ' up to keep your week tidy.</div><div class="actions"><button class="btn" data-act="wrapup">Wrap up</button><button class="btn ghost" data-act="wrap-later">Not now</button></div></div>';
+  if (settings.seasonSeen && settings.seasonSeen !== CUR.season + CUR.year) h += '<div class="banner"><div><b>' + esc(seasonLabel(CUR)) + ' has started.</b> See what’s new this season.</div><div class="actions"><button class="btn" data-act="season-new">Browse ' + esc(seasonLabel(CUR)) + '</button><button class="btn ghost" data-act="season-ok">Not now</button></div></div>';
   if (ui.busy.shows) h += '<p class="sync">Updating episode info…</p>';
   else if (ui.msg.shows) h += '<p class="sync">' + esc(ui.msg.shows) + '</p>';
   h += '<div class="sechead"><h2>' + DAYS_FULL[ui.day] + (ui.day===td ? ' (today)' : '') + '</h2><span class="sub">' + dayShows.length + ' show' + (dayShows.length===1?'':'s') + '</span></div>';
@@ -701,7 +1188,7 @@ function weekView(){
     const wl = state.watchlist.slice().sort((a,b) => (a.date||'9').localeCompare(b.date||'9'));
     h += '<div class="sechead" style="margin-top:22px"><h2>Movies on your list</h2><span class="sub">' + wl.length + '</span></div><div class="list">' + wl.map(m =>
       '<div class="card">' + tile(m.title, m.cover) +
-      '<div class="cardmain"><span class="ttl"><span>' + esc(m.title) + '</span></span><span class="meta">' + esc(whenText(m.date)) + '</span>' + (m.where ? '<span class="meta">' + esc(m.where) + '</span>' : '') + '</div>' +
+      '<div class="cardmain"><span class="ttl"><span>' + esc(m.title) + '</span></span><span class="meta">' + esc(whenText(m.date)) + '</span>' + (m.where ? '<span class="meta">' + esc(m.where) + '</span>' : '') + '<a class="meta wlink" href="' + esc(watchLink(m, 'movie')) + '" target="_blank" rel="noopener">Where to watch</a></div>' +
       '<div class="side"><button class="sbtn done" data-wdone="' + m.id + '" aria-label="Mark ' + esc(m.title) + ' as seen">Seen</button>' +
       '<button class="sbtn" data-wdel="' + m.id + '" aria-label="Remove ' + esc(m.title) + ' from your list"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></div>'
     ).join('') + '</div>';
@@ -710,19 +1197,20 @@ function weekView(){
 }
 
 function showCard(s){
-  const i = showInfo(s);
+  const i = showInfo(s), fresh = newEps(s, i), ty = typeOf(s);
   const epLine = (i.finished ? 'All ' + i.total + ' watched' : 'Next: ep ' + (i.ep + 1) + ' of ' + (i.total || '?')) + (s.time ? ', ' + fmtTime(s.time) : '');
   const status = [i.airText, i.endText, (i.left != null && !i.finished) ? i.left + ' left' : ''].filter(Boolean).map((p, n) => n ? p[0].toLowerCase() + p.slice(1) : p).join(', ');
   const behind = i.behind > 0 ? ' <b>' + i.behind + ' to catch up</b>' : '';
   return '<div class="card">' + tile(s.title, s.cover) +
     '<button class="cardmain" data-edit="' + s.id + '" aria-label="Edit ' + esc(s.title) + '">' +
-      '<span class="ttl"><span>' + esc(s.title) + '</span>' + (s.isNew ? '<span class="tag">NEW</span>' : '') + (typeOf(s) === 'tv' ? '<span class="tag tv">TV</span>' : '') + '</span>' +
+      '<span class="ttl"><span>' + esc(s.title) + '</span>' + (fresh ? '<span class="tag hot">' + fresh + ' new ep' + (fresh === 1 ? '' : 's') + '</span>' : '') + (s.isNew ? '<span class="tag">NEW</span>' : '') + (ty === 'tv' ? '<span class="tag tv">TV</span>' : '') + '</span>' +
       '<span class="meta">' + esc(epLine) + '</span>' +
       '<span class="bar"><i style="width:' + i.pct + '%"></i></span>' +
       '<span class="meta">' + esc(status) + behind + '</span>' +
     '</button>' +
     '<div class="side">' +
       '<button class="sbtn star' + (s.fav?' on':'') + '" data-fav="' + s.id + '" aria-pressed="' + !!s.fav + '" aria-label="Favorite ' + esc(s.title) + '"><svg width="20" height="20" viewBox="0 0 24 24" fill="' + (s.fav?'currentColor':'none') + '" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></svg></button>' +
+      '<a class="sbtn play" href="' + esc(watchLink(s, ty)) + '" target="_blank" rel="noopener" aria-label="' + esc(watchLabel(ty) + ': ' + s.title) + '">' + ICON_PLAY + '</a>' +
       (i.finished
         ? '<button class="sbtn done" data-finish="' + s.id + '" aria-label="Move ' + esc(s.title) + ' to library">Done</button>'
         : '<button class="sbtn" data-plus="' + s.id + '" aria-label="Watched episode ' + (i.ep + 1) + ' of ' + esc(s.title) + '">+1</button>') +
@@ -849,25 +1337,25 @@ function libraryView(){
   const isMovie = ui.lType === 'movie';
   const eps = lib.reduce((a,x) => a + (Number(x.eps)||0), 0);
   const favs = lib.filter(x => x.fav).length;
-  let items = lib.filter(x => ui.lFilter==='all' || (ui.lFilter==='fav' ? x.fav : x.status === ui.lFilter));
+  let items = lib.filter(x => ui.lFilter==='all' || (ui.lFilter==='fav' ? x.fav : ui.lFilter==='rated' ? (Number(x.rating)||0) >= 4 : x.status === ui.lFilter));
   if (ui.lQ) items = items.filter(x => norm(x.title).includes(norm(ui.lQ)));
   items.sort((a,b) => a.title.localeCompare(b.title));
   let h = '<div class="top"><div><div class="sub">Everything you’ve watched</div><h1>Library</h1></div>' +
-    '<div style="display:flex;gap:8px"><button class="btn ghost" data-act="import">Import</button>' +
-    '<button class="iconbtn" data-act="add-lib" aria-label="Add to library"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div></div>';
+    '<div style="display:flex;gap:8px"><button class="iconbtn" data-act="year" aria-label="Year in review">' + ICON_CHART + '</button><button class="btn ghost" data-act="import">Import</button>' +
+    '<button class="iconbtn" data-act="add-lib" aria-label="Find a title to add"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div></div>';
   h += '<div class="seg" role="group" aria-label="Library type">' + Object.keys(TYPES).map(k => '<button data-ltype="' + k + '" aria-pressed="' + (k === ui.lType) + '">' + TYPES[k] + ' <span>' + all.filter(x => typeOf(x) === k).length + '</span></button>').join('') + '</div>';
   h += '<div class="stats"><div class="stat"><span class="v">' + lib.length + '</span><span class="k">' + (isMovie ? 'Movies' : 'Shows') + '</span></div><div class="stat"><span class="v">' + (isMovie ? lib.filter(x => x.status !== 'dropped').length : eps) + '</span><span class="k">' + (isMovie ? 'Finished' : 'Episodes') + '</span></div><div class="stat"><span class="v" style="color:var(--accent-ink)">' + favs + '</span><span class="k">Favorites</span></div></div>';
   h += '<label class="vh" for="lq">Search your library</label><input id="lq" class="search" type="search" placeholder="Search your library" value="' + esc(ui.lQ) + '">';
-  h += '<div class="chips">' + chip('lfilter','all','All',ui.lFilter) + chip('lfilter','fav','Favorites',ui.lFilter) + chip('lfilter','completed','Completed',ui.lFilter) + chip('lfilter','dropped','Dropped',ui.lFilter) + '</div>';
+  h += '<div class="chips">' + chip('lfilter','all','All',ui.lFilter) + chip('lfilter','fav','Favorites',ui.lFilter) + chip('lfilter','rated','Top rated',ui.lFilter) + chip('lfilter','completed','Completed',ui.lFilter) + chip('lfilter','dropped','Dropped',ui.lFilter) + '</div>';
   if (!lib.length){
-    h += '<div class="empty"><div>' + (ui.lType === 'anime' ? 'Finished shows from your week land here. You can also bring in your Excel list.' : 'No ' + (ui.lType === 'tv' ? 'TV shows' : 'movies') + ' yet. Bring in your Excel list or add one with +.') + '</div><button class="btn" data-act="import">Import from Excel</button></div>';
+    h += '<div class="empty"><div>' + (ui.lType === 'anime' ? 'Finished shows from your week land here. You can also bring in your Excel list.' : 'No ' + (ui.lType === 'tv' ? 'TV shows' : 'movies') + ' yet. Tap + to find any title, old or new, or bring in your Excel list.') + '</div><button class="btn" data-act="import">Import from Excel</button></div>';
   } else if (!items.length){
     h += '<div class="empty">Nothing matches.</div>';
   } else {
     h += '<div class="rows">' + items.map(x => {
       const bits = [x.season, x.eps ? x.eps + ' eps' : '', x.status === 'dropped' ? 'Dropped' : ''].filter(Boolean).join(', ');
       return '<button class="row" data-libedit="' + x.id + '"><span class="tile" style="background:' + tileColor(x.title) + '" aria-hidden="true">' + (x.cover ? '<img src="' + esc(x.cover) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : esc(initials(x.title))) + '</span>' +
-        '<span class="info"><span>' + esc(x.title) + '</span><span class="meta">' + esc(bits || 'No details yet') + '</span></span>' +
+        '<span class="info"><span>' + esc(x.title) + '</span><span class="meta">' + (x.rating ? '<span class="stars" aria-label="' + x.rating + ' out of 5">' + stars(x.rating) + '</span> ' : '') + esc(bits || (x.rating ? '' : 'No details yet')) + '</span>' + (x.note ? '<span class="meta notep">' + esc(x.note) + '</span>' : '') + '</span>' +
         (x.fav ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round" style="color:var(--accent-ink);flex-shrink:0" role="img" aria-label="Favorite"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></svg>' : '') +
         '</button>';
     }).join('') + '</div>';
@@ -894,14 +1382,18 @@ function libSheet(x, isNewEntry){
     '<div class="field"><label for="l-eps">Episodes</label><input id="l-eps" type="number" inputmode="numeric" min="0" value="' + (x.eps||'') + '"></div></div>' +
     '<div class="field"><label for="l-status">Status</label><select id="l-status"><option value="completed"' + (x.status!=='dropped'?' selected':'') + '>Completed</option><option value="dropped"' + (x.status==='dropped'?' selected':'') + '>Dropped</option></select></div>' +
     '<label class="check"><input id="l-fav" type="checkbox"' + (x.fav?' checked':'') + '> Favorite</label>' +
+    '<div class="field"><span class="flabel">Your rating</span>' + starPicker(Number(x.rating) || 0) + '</div>' +
+    '<div class="field"><label for="l-note">Note</label><textarea id="l-note" class="note-in" placeholder="What stood out?">' + esc(x.note || '') + '</textarea></div>' +
     '<div class="actions"><button class="btn ghost" data-close="1">Cancel</button><button class="btn" id="l-save">' + (isNewEntry ? 'Add' : 'Save changes') + '</button></div>' +
     (isNewEntry ? '' : '<div class="actions"><button class="btn danger" id="l-del">Delete from library</button></div>'),
     sheet => {
+      let rv = Number(x.rating) || 0;
+      bindStars(sheet, v => v === undefined ? rv : (rv = v));
       $('#l-save', sheet).addEventListener('click', () => {
         const title = $('#l-title', sheet).value.trim();
         if (!title){ toast('Add a title first'); return; }
         if (norm(title) !== norm(x.title) || $('#l-type', sheet).value !== typeOf(x)){ x.cover = ''; x.coverChecked = false; }
-        Object.assign(x, { title, type: $('#l-type', sheet).value, season: $('#l-season', sheet).value.trim(), eps: parseInt($('#l-eps', sheet).value,10) || null, status: $('#l-status', sheet).value, fav: $('#l-fav', sheet).checked });
+        Object.assign(x, { title, type: $('#l-type', sheet).value, season: $('#l-season', sheet).value.trim(), eps: parseInt($('#l-eps', sheet).value,10) || null, status: $('#l-status', sheet).value, fav: $('#l-fav', sheet).checked, rating: rv || null, note: $('#l-note', sheet).value.trim() });
         if (isNewEntry) state.library.push(x);
         save(); closeSheet(); render(); enrichLibrary();
       });
@@ -954,6 +1446,7 @@ function showSheet(s, isNewEntry){
     : (!isNewEntry && s.noLink ? '<p class="meta" style="margin:0">No live episode info found for this title. <button class="linkbtn" id="f-relink">Search again</button></p>' : '');
   openSheet(
     '<h2>' + (isNewEntry ? 'Add to my week' : 'Edit show') + '</h2>' + linkLine +
+    (isNewEntry ? '' : '<a class="btn ghost" href="' + esc(watchLink(s, typeOf(s))) + '" target="_blank" rel="noopener">' + watchLabel(typeOf(s)) + '</a>') +
     '<div class="field"><label for="f-title">Title</label><input id="f-title" value="' + esc(s.title) + '" required></div>' +
     '<div class="two"><div class="field"><label for="f-day">Day</label><select id="f-day">' + dayOpts + '</select></div>' +
     '<div class="field"><label for="f-time">Time</label><input id="f-time" type="time" value="' + esc(s.time||'') + '"></div></div>' +
@@ -1007,6 +1500,7 @@ function showSheet(s, isNewEntry){
 function settingsSheet(){
   openSheet(
     '<h2>Settings</h2>' +
+    alertsSection() +
     syncSection() +
     '<h2 style="margin-top:4px">Your data</h2>' +
     '<p class="meta" style="margin:0">' + (syncOn() ? 'Saved on this device and synced with your code. A backup file is still handy now and then.' : 'Everything is saved on this device only. Download a backup now and then, and use it to move to a new phone.') + '</p>' +
@@ -1017,6 +1511,7 @@ function settingsSheet(){
     '<div class="actions"><button class="btn ghost" data-close="1">Close</button></div>',
     sheet => {
       bindSync(sheet);
+      bindAlerts(sheet);
       $('#s-export', sheet).addEventListener('click', () => {
         const blob = new Blob([JSON.stringify({ app:'airday', v:2, exportedAt:new Date().toISOString(), state }, null, 1)], { type:'application/json' });
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'airday-backup-' + ymd(new Date()) + '.json';
@@ -1064,12 +1559,11 @@ function movieSheet(){
 function finishShow(id, fromSheet){
   const s = state.shows.find(x => x.id === id);
   if (!s) return;
-  const i = showInfo(s), typ = typeOf(s);
-  const existing = state.library.find(x => typeOf(x) === typ && norm(x.title) === norm(s.title));
-  const entry = { season: seasonLabel(CUR), eps: i.total || s.ep || null, fav: !!s.fav, status: i.finished ? 'completed' : (fromSheet && confirm('Mark ' + s.title + ' as dropped? Cancel keeps it as completed.') ? 'dropped' : 'completed') };
-  if (existing) Object.assign(existing, entry); else state.library.push(Object.assign({ id: uid(), type: typ, title: s.title }, entry));
-  state.shows = state.shows.filter(x => x.id !== id);
-  save(); render(); toast(s.title + ' moved to your library');
+  const i = showInfo(s);
+  const status = i.finished ? 'completed' : (fromSheet && confirm('Mark ' + s.title + ' as dropped? Cancel keeps it as completed.') ? 'dropped' : 'completed');
+  const entry = moveToLibrary(s, status);
+  save(); render();
+  rateSheet(entry, s.title + ' moved to your library.');
 }
 
 /* ---------- Events ---------- */
@@ -1078,8 +1572,25 @@ document.addEventListener('click', e => {
   if (!t) return;
   if (t.dataset.close && (t === e.target || t.tagName === 'BUTTON')){ if (t.classList.contains('scrim') && e.target !== t) return; closeSheet(); return; }
   const d = t.dataset;
-  if (d.tab){ ui.tab = d.tab; render(); window.scrollTo(0,0); if (d.tab === 'week') refreshShows(false); return; }
-  if (d.goto){ ui.tab = d.goto; render(); window.scrollTo(0,0); return; }
+  if (d.tab){ if (ui.tab === 'week' && d.tab !== 'week') markSeen(); ui.tab = d.tab; render(); window.scrollTo(0,0); if (d.tab === 'week') refreshShows(false); return; }
+  if (d.goto){ if (ui.tab === 'week' && d.goto !== 'week') markSeen(); ui.tab = d.goto; render(); window.scrollTo(0,0); return; }
+  if (d.year){ yearSheet(d.year); return; }
+  if (d.frdel){
+    const fr = (state.friends || []).find(f => f.id === d.frdel); if (!fr) return;
+    if (!confirm('Remove ' + ((ui.friendData[fr.id] || {}).name || fr.name) + ' from your friends?')) return;
+    state.friends = state.friends.filter(f => f.id !== fr.id); save(); render(); return;
+  }
+  if (d.fradd){
+    const [fid, n] = d.fradd.split(':'); const fd = ui.friendData[fid]; const x = fd && fd.data && (fd.data.shows || [])[Number(n)]; if (!x) return;
+    showSheet({ id: uid(), type: x.ty === 'tv' ? 'tv' : 'anime', title: x.t, anilistId: x.a || null, tvmazeId: x.m || null, cover: x.c || '', day: x.d >= 0 ? x.d : null, time:'', ep:0, total:null, premiere:'', isNew: !!x.k, fav:false }, true);
+    return;
+  }
+  if (d.act === 'wrapup'){ wrapSheet(); return; }
+  if (d.act === 'wrap-later'){ settings.wrapSeen = endedKey(); saveSettings(); render(); return; }
+  if (d.act === 'season-new'){ settings.seasonSeen = CUR.season + CUR.year; saveSettings(); markSeen(); ui.tab = 'season'; ui.sType = 'anime'; ui.sSeason = 'cur'; render(); window.scrollTo(0,0); return; }
+  if (d.act === 'season-ok'){ settings.seasonSeen = CUR.season + CUR.year; saveSettings(); render(); return; }
+  if (d.act === 'year'){ yearSheet(); return; }
+  if (['share-start','share-link','share-stop','friend-add'].includes(d.act)){ friendAction(d.act); return; }
   if (d.day != null){ ui.day = Number(d.day); render(); return; }
   if (d.stype){ ui.sType = d.stype; ui.sFilter = 'all'; ui.sQ = ''; render(); return; }
   if (d.sseason){ ui.sSeason = d.sseason; ui.sFilter = 'all'; render(); return; }
@@ -1097,6 +1608,7 @@ document.addEventListener('click', e => {
   if (d.plus){
     const s = state.shows.find(x => x.id === d.plus); if (!s) return;
     s.ep = (Number(s.ep)||0) + 1;
+    logEvent('ep', s.title, { ty: typeOf(s) });
     const tot = showInfo(s).total; if (tot) s.ep = Math.min(s.ep, tot);
     save(); render();
     if (tot && s.ep >= tot) toast('Finished ' + s.title + '. Tap Done to move it to your library.');
@@ -1111,7 +1623,7 @@ document.addEventListener('click', e => {
     const x = entry && entry.items.find(y => String(y.id) === d.anime); if (!x) return;
     const at = x.at ? new Date(x.at) : null;
     const s = { id: uid(), type:'anime', title: x.t, anilistId: x.id, linkTitle: x.t, cover: x.thumb || x.cover, day: at ? at.getDay() : dayFromDate(x.start),
-      time: at ? hm(at) : '', ep:0, total:null, premiere: x.start, isNew: x.k === 'New', fav:false, epOffset:0,
+      time: at ? hm(at) : '', ep:0, total:null, premiere: x.start, isNew: x.k === 'New', fav:false, epOffset:0, genres: x.genres || [],
       live: { total: x.eps, aired: x.next ? x.next - 1 : (x.status === 'FINISHED' ? x.eps : 0), at: x.at, status: x.status } };
     showSheet(s, true);
     return;
@@ -1130,15 +1642,18 @@ document.addEventListener('click', e => {
   }
   if (d.wdone){
     const m = state.watchlist.find(y => y.id === d.wdone); if (!m) return;
-    if (!state.library.some(x => typeOf(x) === 'movie' && norm(x.title) === norm(m.title))) state.library.push({ id: uid(), type:'movie', title: m.title, season: m.date ? m.date.slice(0,4) : '', eps:null, fav:false, status:'completed' });
-    state.watchlist = state.watchlist.filter(y => y.id !== m.id); save(); render(); toast(m.title + ' moved to your library');
+    let entry = state.library.find(x => typeOf(x) === 'movie' && norm(x.title) === norm(m.title));
+    if (!entry){ entry = { id: uid(), type:'movie', title: m.title, season: m.date ? m.date.slice(0,4) : '', eps:null, fav:false, status:'completed', cover: m.cover || '', coverChecked: !!m.cover }; state.library.push(entry); }
+    entry.doneAt = Date.now(); logEvent('movie', m.title, { ty:'movie' });
+    state.watchlist = state.watchlist.filter(y => y.id !== m.id); save(); render();
+    rateSheet(entry, m.title + ' moved to your library.');
     return;
   }
   if (d.wdel){ state.watchlist = state.watchlist.filter(y => y.id !== d.wdel); save(); render(); return; }
   if (d.act === 'settings'){ settingsSheet(); return; }
-  if (d.act === 'add-movie'){ movieSheet(); return; }
-  if (d.act === 'add-show'){ showSheet({ id: uid(), type: (ui.tab === 'season' && ui.sType === 'tv') ? 'tv' : 'anime', title:'', day: null, time:'', ep:0, total:null, premiere:'', isNew:true, fav:false }, true); return; }
-  if (d.act === 'add-lib'){ libSheet({ id: uid(), type: ui.lType, title:'', season:'', eps:null, status:'completed', fav:false }, true); return; }
+  if (d.act === 'add-movie'){ findSheet('movie', 'week'); return; }
+  if (d.act === 'add-show'){ findSheet((ui.tab === 'season' && ui.sType === 'tv') ? 'tv' : 'anime', 'week'); return; }
+  if (d.act === 'add-lib'){ findSheet(ui.lType, 'library'); return; }
   if (d.act === 'import'){ importSheet(); return; }
 });
 let searchTimer = null;
@@ -1151,12 +1666,14 @@ document.addEventListener('input', e => {
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#modal').innerHTML) closeSheet(); });
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible'){ render(); pullSync().then(() => refreshShows(false)); }
-  else if (settings.sync && settings.sync.dirty){ clearTimeout(syncTimer); pushSync(); }
+  else { if (ui.tab === 'week') markSeen(); if (settings.sync && settings.sync.dirty){ clearTimeout(syncTimer); pushSync(); } if (state.share){ clearTimeout(pubTimer); publishShare(); } }
 });
 
+if (!settings.seasonSeen){ settings.seasonSeen = CUR.season + CUR.year; saveSettings(); }
 render();
-pullSync().then(() => refreshShows(false));
+pullSync().then(() => { refreshShows(false); handleInvite(); });
 setTimeout(enrichLibrary, 3000);
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
 })();
 
 </script>
