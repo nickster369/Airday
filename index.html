@@ -160,7 +160,7 @@ function readLS(k){ try { const r = localStorage.getItem(k); return r ? JSON.par
 function writeLS(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch(e){ return false; } }
 function blank(){ return { v:2, updatedAt:0, shows:[], library:[], watchlist:[] }; }
 let state = Object.assign(blank(), readLS(LS_KEY) || {});
-let settings = Object.assign({ tmdbKey:'' }, readLS(SET_KEY) || {});
+let settings = Object.assign({}, readLS(SET_KEY) || {});
 let cache = Object.assign({ anime:{}, tv:null, movies:null, showsAt:0 }, readLS(CACHE_KEY) || {});
 function save(){ state.updatedAt = Date.now(); if (!writeLS(LS_KEY, state)) toast('Couldn’t save on this device. Download a backup from Settings.'); }
 function saveCache(){ writeLS(CACHE_KEY, cache); }
@@ -371,34 +371,30 @@ function applyTV(s, show){
     at: next ? Date.parse(next.airstamp) : null, status: next ? 'RELEASING' : (inSeason.length ? 'FINISHED' : 'NOT_YET_RELEASED') });
 }
 
-/* ---------- TMDB (movies) ---------- */
-async function fetchMovies(key){
-  const bearer = key.length > 40;
-  const headers = bearer ? { Authorization:'Bearer ' + key, accept:'application/json' } : { accept:'application/json' };
-  const get = async (path, page) => {
-    const r = await fetch('https://api.themoviedb.org/3/movie/' + path + '?' + (bearer ? '' : 'api_key=' + encodeURIComponent(key) + '&') + 'language=en-US&region=CA&page=' + page, { headers });
-    if (r.status === 401) throw new Error('key');
-    if (!r.ok) throw new Error('tmdb');
-    return (await r.json()).results || [];
-  };
-  const lists = await Promise.all([get('now_playing',1), get('now_playing',2), get('upcoming',1), get('upcoming',2), get('upcoming',3)]);
+/* ---------- Movies (TMDB through your Cloudflare relay) ---------- */
+const MOVIES_RELAY = 'https://airday-movies.nicolassabbagha802.workers.dev';
+function relayOn(){ return /^https:\/\//.test(MOVIES_RELAY) && !/REPLACE-ME/.test(MOVIES_RELAY); }
+async function fetchMovies(){
+  const r = await fetch(MOVIES_RELAY + '/movies');
+  if (!r.ok) throw new Error('relay ' + r.status);
+  const list = (await r.json()).results || [];
   const lo = today(); lo.setDate(lo.getDate() - 45); const hi = today(); hi.setDate(hi.getDate() + 150);
   const seen = new Map();
-  lists.flat().forEach(m => {
-    const d = parseDate(m.release_date);
+  list.forEach(m => {
+    const d = parseDate(m.date);
     if (!d || d < lo || d > hi || seen.has(m.id)) return;
-    seen.set(m.id, { id:m.id, t:m.title, d:m.release_date, w: d <= today() ? 'In theaters' : 'Theaters', cover: m.poster_path ? 'https://image.tmdb.org/t/p/w185' + m.poster_path : '', pop: m.popularity || 0 });
+    seen.set(m.id, { id:m.id, t:m.title, d:m.date, w: d <= today() ? 'In theaters' : 'Theaters', cover: m.poster ? 'https://image.tmdb.org/t/p/w185' + m.poster : '', pop: m.popularity || 0 });
   });
   return [...seen.values()].sort((a,b) => a.d.localeCompare(b.d));
 }
 function ensureMovies(force){
-  if (!settings.tmdbKey) return;
+  if (!relayOn()) return;
   const e = cache.movies;
-  if (ui.busy.movies || coolingDown('movies', force) || (!force && e && e.key === settings.tmdbKey.slice(-6) && Date.now() - e.at < 12 * HOUR)) return;
+  if (ui.busy.movies || coolingDown('movies', force) || (!force && e && e.v === 3 && Date.now() - e.at < 12 * HOUR)) return;
   ui.busy.movies = true; ui.msg.movies = '';
   (async () => {
-    try { cache.movies = { at: Date.now(), key: settings.tmdbKey.slice(-6), items: await fetchMovies(settings.tmdbKey) }; saveCache(); }
-    catch(err){ ui.failAt.movies = Date.now(); ui.msg.movies = err.message === 'key' ? 'TMDB didn’t accept your key. Check it in Settings.' : 'Couldn’t reach TMDB. ' + (e ? 'Showing the list from ' + ago(e.at) + '.' : 'Showing a saved list for now.'); }
+    try { cache.movies = { v: 3, at: Date.now(), items: await fetchMovies() }; saveCache(); }
+    catch(err){ ui.failAt.movies = Date.now(); ui.msg.movies = 'Couldn’t load movies. ' + (e ? 'Showing the list from ' + ago(e.at) + '.' : 'Showing a saved list for now.'); }
     finally { ui.busy.movies = false; if (ui.tab === 'season') render(); }
   })();
 }
@@ -526,22 +522,18 @@ async function enrichLibrary(){
       await sleep(600);
     }
     if (changed) done();
-    // Movies: TMDB (needs a key)
-    if (settings.tmdbKey){
-      const key = settings.tmdbKey, bearer = key.length > 40;
+    // Movies: TMDB through the relay
+    if (relayOn()){
       for (const x of state.library.filter(y => typeOf(y) === 'movie' && !y.coverChecked)){
         try {
           const t = libSearchTitle(x.title), yr = (t.match(/\b(19|20)\d{2}$/) || [''])[0];
-          const qs = 'query=' + encodeURIComponent(yr ? t.replace(yr, '').trim() : t) + (yr ? '&year=' + yr : '') + '&include_adult=false&language=en-US';
-          const r = await fetch('https://api.themoviedb.org/3/search/movie?' + (bearer ? '' : 'api_key=' + encodeURIComponent(key) + '&') + qs, { headers: bearer ? { Authorization:'Bearer ' + key } : {} });
-          if (r.status === 401) break;
-          if (r.ok){
-            const m = ((await r.json()).results || [])[0];
-            if (m){ if (m.poster_path) x.cover = 'https://image.tmdb.org/t/p/w185' + m.poster_path; if (!x.season && m.release_date) x.season = m.release_date.slice(0,4); x.tmdbId = m.id; }
-            x.coverChecked = true; changed++;
-          }
+          const r = await fetch(MOVIES_RELAY + '/search?q=' + encodeURIComponent(yr ? t.replace(yr, '').trim() : t) + (yr ? '&year=' + yr : ''));
+          if (!r.ok) break;
+          const m = (await r.json()).result;
+          if (m){ if (m.poster) x.cover = 'https://image.tmdb.org/t/p/w185' + m.poster; if (!x.season && m.date) x.season = m.date.slice(0,4); x.tmdbId = m.id; }
+          x.coverChecked = true; changed++;
         } catch(err){ break; }
-        await sleep(300);
+        await sleep(200);
       }
       done();
     }
@@ -710,7 +702,7 @@ function tvView(seg){
 
 function moviesView(seg){
   ensureMovies();
-  const live = settings.tmdbKey ? cache.movies : null, t0 = today();
+  const live = relayOn() ? cache.movies : null, t0 = today();
   const onList = new Set(state.watchlist.map(m => norm(m.title)));
   const seen = new Set(state.library.filter(x => typeOf(x) === 'movie').map(x => norm(x.title)));
   let items = (live ? live.items : MOVIES_FALLBACK).slice();
@@ -719,7 +711,7 @@ function moviesView(seg){
   if (ui.sQ) items = items.filter(m => norm(m.t).includes(norm(ui.sQ)));
   let h = '<div class="top"><div><div class="sub">' + (live ? 'Live from TMDB, Canadian dates' : 'In theaters and streaming') + '</div><h1>Movies</h1></div></div>' + seg;
   h += '<div class="chips">' + chip('mfilter','all','All',ui.mFilter) + chip('mfilter','soon','Coming soon',ui.mFilter) + chip('mfilter','out','Out now',ui.mFilter) + '</div>';
-  if (!settings.tmdbKey) h += '<div class="empty" style="margin-bottom:12px"><div>This is a saved list. Add a free TMDB key and this tab fills itself with what’s in Canadian theaters and coming soon.</div><button class="btn" data-act="settings">Add TMDB key</button></div>';
+  if (!relayOn()) h += '<p class="sync">This is a saved list. Live movie dates aren’t switched on yet.</p>';
   else h += syncLine('movies', live);
   h += searchBox('Search movies');
   h += '<div class="list">' + items.map(m => {
@@ -899,10 +891,7 @@ function showSheet(s, isNewEntry){
 function settingsSheet(){
   openSheet(
     '<h2>Settings</h2>' +
-    '<div class="field"><label for="s-tmdb">TMDB key for live movie dates</label><input id="s-tmdb" autocomplete="off" spellcheck="false" value="' + esc(settings.tmdbKey) + '" placeholder="Paste your API key or read access token">' +
-    '<span class="meta">Free: sign up at themoviedb.org, then Settings › API. It stays on this device.</span></div>' +
-    '<div class="actions"><button class="btn" id="s-save">Save key</button></div>' +
-    '<h2 style="margin-top:8px">Your data</h2>' +
+    '<h2 style="margin-top:4px">Your data</h2>' +
     '<p class="meta" style="margin:0">Everything is saved on this device only. Download a backup now and then, and use it to move to a new phone.</p>' +
     '<div class="actions"><button class="btn ghost" id="s-export">Download backup</button>' +
     '<label class="btn ghost" style="display:flex;align-items:center;justify-content:center;cursor:pointer">Restore backup<input id="s-import" type="file" accept=".json,application/json" class="vh"></label></div>' +
@@ -910,12 +899,6 @@ function settingsSheet(){
     '<p class="note" style="margin:4px 0 0">Anime data from <a href="https://anilist.co" target="_blank" rel="noopener">AniList</a>. TV data from <a href="https://www.tvmaze.com" target="_blank" rel="noopener">TVmaze</a> (CC BY-SA). This product uses the TMDB API but is not endorsed or certified by TMDB.</p>' +
     '<div class="actions"><button class="btn ghost" data-close="1">Close</button></div>',
     sheet => {
-      $('#s-save', sheet).addEventListener('click', () => {
-        settings.tmdbKey = $('#s-tmdb', sheet).value.trim(); saveSettings(); cache.movies = null; saveCache(); setTimeout(enrichLibrary, 1500);
-        closeSheet(); toast(settings.tmdbKey ? 'Key saved. Movies will load live.' : 'Key removed.');
-        if (settings.tmdbKey){ ui.tab = 'season'; ui.sType = 'movie'; ui.sQ = ''; }
-        render();
-      });
       $('#s-export', sheet).addEventListener('click', () => {
         const blob = new Blob([JSON.stringify({ app:'airday', v:2, exportedAt:new Date().toISOString(), state }, null, 1)], { type:'application/json' });
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'airday-backup-' + ymd(new Date()) + '.json';
@@ -1022,7 +1005,7 @@ document.addEventListener('click', e => {
     return;
   }
   if (d.movie){
-    const src = settings.tmdbKey && cache.movies ? cache.movies.items : MOVIES_FALLBACK;
+    const src = relayOn() && cache.movies ? cache.movies.items : MOVIES_FALLBACK;
     const m = src.find(y => y.t === d.movie); if (!m) return;
     state.watchlist.push({ id: uid(), title: m.t, date: m.d, where: m.w, cover: m.cover || '' }); save(); render(); toast('Added ' + m.t + ' to your list');
     return;
