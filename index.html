@@ -292,7 +292,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 function toast(msg){
   const el = $('#toast');
   el.innerHTML = '<div class="toast" role="status">' + esc(msg) + '</div>';
-  clearTimeout(toast.t); toast.t = setTimeout(() => el.innerHTML = '', 2800);
+  clearTimeout(toast.t); toast.t = setTimeout(() => el.innerHTML = '', msg.length > 80 ? 7000 : 2800);
 }
 function whenText(ds){
   const d = parseDate(ds); if (!d) return 'Date not set';
@@ -877,20 +877,38 @@ async function sendAlertShows(){
     if (r.status === 200){ settings.alertsHash = hash; saveSettings(); }
   } catch(e){}
 }
+function withTimeout(p, ms, code){ return Promise.race([p, new Promise((_, reject) => setTimeout(() => reject(new Error(code)), ms))]); }
+async function swReady(){
+  let reg = await navigator.serviceWorker.getRegistration();
+  if (!reg){
+    try { reg = await navigator.serviceWorker.register('sw.js'); } catch(e){ throw new Error('sw'); }
+  }
+  if (reg.active) return reg;
+  return withTimeout(navigator.serviceWorker.ready, 10000, 'sw');
+}
 async function turnOnAlerts(){
   if (!alertsSupported()) throw new Error('unsupported');
-  const perm = await Notification.requestPermission();
+  const perm = await withTimeout(Notification.requestPermission(), 60000, 'perm');
   if (perm !== 'granted') throw new Error('denied');
-  const k = await syncFetch('GET', '/push/key');
+  const k = await withTimeout(syncFetch('GET', '/push/key'), 12000, 'key').catch(() => { throw new Error('key'); });
   if (k.status !== 200 || !k.j || !k.j.key) throw new Error('key');
-  const reg = await navigator.serviceWorker.ready;
+  const reg = await swReady();
   let sub = await reg.pushManager.getSubscription();
-  if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64urlToBytes(k.j.key) });
+  if (!sub) sub = await withTimeout(reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64urlToBytes(k.j.key) }), 15000, 'subscribe');
   const shows = alertShows();
-  const r = await syncFetch('POST', '/push/subscribe', { sub: sub.toJSON(), shows });
+  const r = await withTimeout(syncFetch('POST', '/push/subscribe', { sub: sub.toJSON(), shows }), 12000, 'save').catch(() => { throw new Error('save'); });
   if (r.status !== 200) throw new Error('save');
   settings.alerts = true; settings.alertsHash = JSON.stringify(shows); saveSettings();
 }
+const ALERT_ERRORS = {
+  denied: 'Notifications are blocked. Allow them for Airday in your phone or browser settings, then try again.',
+  perm: 'The notification prompt didn’t get an answer. Try again and tap Allow.',
+  sw: 'Airday couldn’t finish setting up its background file (sw.js). Check that sw.js is uploaded next to index.html, then close and reopen Airday.',
+  key: 'The relay didn’t answer. Make sure the newest airday-worker.js is deployed in Cloudflare.',
+  subscribe: 'Your browser didn’t finish setting up notifications. Close and reopen Airday, then try again.',
+  save: 'The relay couldn’t save your alert settings. Try again in a moment.',
+  unsupported: 'This browser can’t show alerts.'
+};
 async function turnOffAlerts(){
   try { const sub = await currentSub(); if (sub){ await syncFetch('POST', '/push/unsubscribe', { endpoint: sub.endpoint }); await sub.unsubscribe(); } } catch(e){}
   settings.alerts = false; settings.alertsHash = ''; saveSettings();
@@ -909,7 +927,7 @@ function bindAlerts(sheet){
   if (on) on.addEventListener('click', async () => {
     on.disabled = true; on.textContent = 'Turning on…';
     try { await turnOnAlerts(); settingsSheet(); toast('Alerts are on for this device.'); }
-    catch(e){ on.disabled = false; on.textContent = 'Turn on alerts'; toast(e.message === 'denied' ? 'Notifications are blocked. Allow them for Airday in your phone or browser settings, then try again.' : 'Couldn’t turn on alerts. Try again in a moment.'); }
+    catch(e){ on.disabled = false; on.textContent = 'Turn on alerts'; toast(ALERT_ERRORS[e.message] || 'Couldn’t turn on alerts. Try again in a moment.'); }
   });
   const off = $('#a-off', sheet);
   if (off) off.addEventListener('click', async () => { await turnOffAlerts(); settingsSheet(); toast('Alerts are off for this device.'); });
