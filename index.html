@@ -131,6 +131,7 @@ nav.tabs button[aria-current="page"]{color:var(--accent-ink);font-weight:600}
 .tile img,.gcard .cover img{width:100%;height:100%;object-fit:cover;display:block}
 .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
 .gcard .cover{height:auto;aspect-ratio:2/3}
+.codebox{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:18px;letter-spacing:.04em;padding:14px;border-radius:12px;background:var(--bg);border:1px solid var(--line);text-align:center;user-select:all;-webkit-user-select:all;word-break:break-all}
 .sync{font-size:12px;color:var(--muted);margin:0 4px 12px}
 .linkbtn{background:none;border:none;padding:0;color:var(--accent-ink);text-decoration:underline;font-size:inherit;font-weight:500;cursor:pointer}
 .note a{color:var(--accent-ink)}
@@ -162,7 +163,7 @@ function blank(){ return { v:2, updatedAt:0, shows:[], library:[], watchlist:[] 
 let state = Object.assign(blank(), readLS(LS_KEY) || {});
 let settings = Object.assign({}, readLS(SET_KEY) || {});
 let cache = Object.assign({ anime:{}, tv:null, movies:null, showsAt:0 }, readLS(CACHE_KEY) || {});
-function save(){ state.updatedAt = Date.now(); if (!writeLS(LS_KEY, state)) toast('Couldn’t save on this device. Download a backup from Settings.'); }
+function save(quiet){ state.updatedAt = Date.now(); if (!writeLS(LS_KEY, state)) toast('Couldn’t save on this device. Download a backup from Settings.'); if (!quiet && typeof markDirty === 'function') markDirty(); }
 function saveCache(){ writeLS(CACHE_KEY, cache); }
 function saveSettings(){ writeLS(SET_KEY, settings); }
 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch(e){}
@@ -447,7 +448,7 @@ async function refreshShows(force){
   }
   if (failed) ui.msg.shows = 'Couldn’t update some episode info. It will try again next time you open the app.';
   else { cache.showsAt = Date.now(); saveCache(); }
-  save();
+  save(true);
   ui.busy.shows = false;
   render();
 }
@@ -495,7 +496,7 @@ async function enrichLibrary(){
   if (enriching) return;
   enriching = true;
   let changed = 0;
-  const done = () => { save(); if (ui.tab === 'library') render(); };
+  const done = () => { save(true); if (ui.tab === 'library') render(); };
   try {
     // Anime: AniList, 10 titles per request
     const anime = state.library.filter(x => typeOf(x) === 'anime' && !x.coverChecked);
@@ -538,6 +539,121 @@ async function enrichLibrary(){
       done();
     }
   } finally { enriching = false; }
+}
+
+/* ---------- Sync across devices (through the Cloudflare relay) ---------- */
+function syncOn(){ return !!(settings.sync && settings.sync.code) && relayOn(); }
+let syncTimer = null, syncBusy = false;
+function markDirty(){
+  if (!syncOn()) return;
+  settings.sync.dirty = true; saveSettings();
+  clearTimeout(syncTimer); syncTimer = setTimeout(pushSync, 2500);
+}
+async function syncFetch(method, path, body){
+  const r = await fetch(MOVIES_RELAY + path, { method, cache:'no-store', headers: body ? { 'Content-Type':'application/json' } : {}, body: body ? JSON.stringify(body) : undefined });
+  let j = null; try { j = await r.json(); } catch(e){}
+  return { status: r.status, j };
+}
+function adopt(data, updatedAt){
+  state = Object.assign(blank(), JSON.parse(data));
+  writeLS(LS_KEY, state);
+  settings.sync.base = updatedAt; settings.sync.dirty = false; settings.sync.at = Date.now(); saveSettings();
+  render();
+}
+function syncGone(){ settings.sync = null; saveSettings(); toast('That sync code no longer exists. Sync is off on this device.'); }
+async function pushSync(){
+  if (!syncOn() || syncBusy) return;
+  syncBusy = true;
+  try {
+    const code = encodeURIComponent(settings.sync.code);
+    const { status, j } = await syncFetch('PUT', '/sync/' + code, { data: JSON.stringify(state), base: settings.sync.base || 0 });
+    if (status === 200){ settings.sync.base = j.updatedAt; settings.sync.dirty = false; settings.sync.at = Date.now(); saveSettings(); }
+    else if (status === 409){
+      const g = await syncFetch('GET', '/sync/' + code);
+      if (g.status === 200){ adopt(g.j.data, g.j.updatedAt); toast('Your other device had newer changes, so Airday loaded those. Redo your last change if it’s missing.'); }
+    }
+    else if (status === 404) syncGone();
+  } catch(e){ /* offline: stays marked, tries again later */ }
+  finally { syncBusy = false; }
+}
+async function pullSync(){
+  if (!syncOn() || syncBusy) return;
+  if (settings.sync.dirty) return pushSync();
+  syncBusy = true;
+  try {
+    const { status, j } = await syncFetch('GET', '/sync/' + encodeURIComponent(settings.sync.code));
+    if (status === 200){
+      if (settings.sync.dirty){ /* a change happened while loading: let the push sort it out */ }
+      else if (j.updatedAt > (settings.sync.base || 0)) adopt(j.data, j.updatedAt);
+      else { settings.sync.at = Date.now(); saveSettings(); }
+    } else if (status === 404) syncGone();
+  } catch(e){}
+  finally { syncBusy = false; }
+  if (settings.sync && settings.sync.dirty) pushSync();
+}
+function normCode(v){
+  let s = String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (s.startsWith('AIRDAY')) s = s.slice(6);
+  return s.length === 12 ? 'AIRDAY-' + s.slice(0,4) + '-' + s.slice(4,8) + '-' + s.slice(8) : '';
+}
+function syncSection(){
+  if (!relayOn()) return '';
+  if (syncOn()){
+    return '<h2 style="margin-top:4px">Sync across devices</h2>' +
+      '<p class="meta" style="margin:0">On. Enter this code on your other phone or computer. Keep it private: anyone with it can see and change your lists.</p>' +
+      '<div class="codebox">' + esc(settings.sync.code) + '</div>' +
+      (settings.sync.at ? '<p class="meta" style="margin:0">Last synced ' + ago(settings.sync.at) + '.</p>' : '') +
+      '<div class="actions"><button class="btn ghost" id="s-copy">Copy code</button><button class="btn ghost" id="s-syncnow">Sync now</button></div>' +
+      '<div class="actions"><button class="btn danger" id="s-syncoff">Turn off sync on this device</button></div>';
+  }
+  return '<h2 style="margin-top:4px">Sync across devices</h2>' +
+    '<p class="meta" style="margin:0">Keep your phone and computer in step. Turn it on here, then enter the code on your other device.</p>' +
+    '<div class="actions"><button class="btn" id="s-syncon">Turn on sync</button></div>' +
+    '<div class="field"><label for="s-codein">Already have a code?</label><input id="s-codein" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="AIRDAY-XXXX-XXXX-XXXX"></div>' +
+    '<div class="actions"><button class="btn ghost" id="s-connect">Connect this device</button></div>';
+}
+function bindSync(sheet){
+  const on = $('#s-syncon', sheet);
+  if (on) on.addEventListener('click', async () => {
+    on.disabled = true; on.textContent = 'Turning on…';
+    try {
+      const { status, j } = await syncFetch('POST', '/sync', { data: JSON.stringify(state) });
+      if (status !== 200 || !j || !j.code) throw new Error('sync');
+      settings.sync = { code: j.code, base: j.updatedAt, at: Date.now(), dirty: false }; saveSettings();
+      settingsSheet(); toast('Sync is on. Enter this code on your other device.');
+    } catch(e){ on.disabled = false; on.textContent = 'Turn on sync'; toast('Couldn’t turn on sync. Check your connection and try again.'); }
+  });
+  const con = $('#s-connect', sheet);
+  if (con) con.addEventListener('click', async () => {
+    const code = normCode($('#s-codein', sheet).value);
+    if (!code){ toast('That doesn’t look like a sync code. It looks like AIRDAY-XXXX-XXXX-XXXX.'); return; }
+    con.disabled = true; con.textContent = 'Connecting…';
+    try {
+      const { status, j } = await syncFetch('GET', '/sync/' + encodeURIComponent(code));
+      if (status === 404){ toast('No synced lists found for that code.'); return; }
+      if (status !== 200) throw new Error('sync');
+      const incoming = JSON.parse(j.data), n = (incoming.shows||[]).length, m = (incoming.library||[]).length;
+      if ((state.shows.length || state.library.length) && !confirm('Replace what’s on this device with your synced lists (' + n + ' shows, ' + m + ' library titles)?')) return;
+      settings.sync = { code, base: 0 }; adopt(j.data, j.updatedAt);
+      closeSheet(); toast('Connected. This device now stays in sync.'); cache.showsAt = 0; refreshShows(true); setTimeout(enrichLibrary, 3000);
+    } catch(e){ toast('Couldn’t connect. Check your connection and try again.'); }
+    finally { con.disabled = false; con.textContent = 'Connect this device'; }
+  });
+  const cp = $('#s-copy', sheet);
+  if (cp) cp.addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(settings.sync.code); toast('Code copied'); } catch(e){ toast('Press and hold the code to copy it.'); }
+  });
+  const now = $('#s-syncnow', sheet);
+  if (now) now.addEventListener('click', async () => {
+    now.disabled = true; now.textContent = 'Syncing…';
+    if (settings.sync.dirty) await pushSync(); else await pullSync();
+    settingsSheet(); toast('Synced');
+  });
+  const off = $('#s-syncoff', sheet);
+  if (off) off.addEventListener('click', () => {
+    if (!confirm('Turn off sync on this device? Your lists stay here, they just stop updating from your other devices.')) return;
+    settings.sync = null; saveSettings(); settingsSheet(); toast('Sync is off on this device.');
+  });
 }
 
 /* ---------- Views ---------- */
@@ -891,14 +1007,16 @@ function showSheet(s, isNewEntry){
 function settingsSheet(){
   openSheet(
     '<h2>Settings</h2>' +
+    syncSection() +
     '<h2 style="margin-top:4px">Your data</h2>' +
-    '<p class="meta" style="margin:0">Everything is saved on this device only. Download a backup now and then, and use it to move to a new phone.</p>' +
+    '<p class="meta" style="margin:0">' + (syncOn() ? 'Saved on this device and synced with your code. A backup file is still handy now and then.' : 'Everything is saved on this device only. Download a backup now and then, and use it to move to a new phone.') + '</p>' +
     '<div class="actions"><button class="btn ghost" id="s-export">Download backup</button>' +
     '<label class="btn ghost" style="display:flex;align-items:center;justify-content:center;cursor:pointer">Restore backup<input id="s-import" type="file" accept=".json,application/json" class="vh"></label></div>' +
     '<div class="actions"><button class="btn ghost" id="s-refresh">Refresh all live data</button></div>' +
     '<p class="note" style="margin:4px 0 0">Anime data from <a href="https://anilist.co" target="_blank" rel="noopener">AniList</a>. TV data from <a href="https://www.tvmaze.com" target="_blank" rel="noopener">TVmaze</a> (CC BY-SA). This product uses the TMDB API but is not endorsed or certified by TMDB.</p>' +
     '<div class="actions"><button class="btn ghost" data-close="1">Close</button></div>',
     sheet => {
+      bindSync(sheet);
       $('#s-export', sheet).addEventListener('click', () => {
         const blob = new Blob([JSON.stringify({ app:'airday', v:2, exportedAt:new Date().toISOString(), state }, null, 1)], { type:'application/json' });
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'airday-backup-' + ymd(new Date()) + '.json';
@@ -1031,10 +1149,13 @@ document.addEventListener('input', e => {
   }
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#modal').innerHTML) closeSheet(); });
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible'){ render(); refreshShows(false); } });
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible'){ render(); pullSync().then(() => refreshShows(false)); }
+  else if (settings.sync && settings.sync.dirty){ clearTimeout(syncTimer); pushSync(); }
+});
 
 render();
-refreshShows(false);
+pullSync().then(() => refreshShows(false));
 setTimeout(enrichLibrary, 3000);
 })();
 
