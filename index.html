@@ -380,13 +380,55 @@ async function fetchAnimeSeason(so, withContinuing){
   res.forEach((d, i) => (d.Page.media || []).forEach(m => { if (!seen.has(m.id)) seen.set(m.id, mapAnime(m, i === 2)); }));
   return [...seen.values()];
 }
+/* Backup anime source when AniList is down: Jikan, a free MyAnimeList API. */
+const JIKAN = 'https://api.jikan.moe/v4';
+function nextJst(dayName, time){
+  const d = ['sundays','mondays','tuesdays','wednesdays','thursdays','fridays','saturdays'].indexOf(String(dayName || '').toLowerCase());
+  if (d < 0 || !time) return null;
+  const [h, m] = String(time).split(':').map(Number);
+  const now = Date.now(), jst = new Date(now + 9 * HOUR);
+  const diff = (d - jst.getUTCDay() + 7) % 7;
+  const t = Date.UTC(jst.getUTCFullYear(), jst.getUTCMonth(), jst.getUTCDate() + diff, h || 0, m || 0) - 9 * HOUR;
+  return t < now ? t + 7 * DAY_MS : t;
+}
+function mapJikan(a){
+  const t = (a.title_english || a.title || '').trim(), b = a.broadcast || {};
+  const status = a.status === 'Finished Airing' ? 'FINISHED' : a.status === 'Currently Airing' ? 'RELEASING' : 'NOT_YET_RELEASED';
+  const img = (a.images && a.images.jpg) || {};
+  return { id: null, mal: a.mal_id, t, alt: a.title || '', k: SEQUEL_RE.test(t + ' ' + (a.title || '')) ? 'Returning' : 'New', eps: a.episodes || null, status,
+    at: status === 'RELEASING' ? nextJst(b.day, b.time) : null, next: null, cover: img.large_image_url || img.image_url || '', thumb: img.image_url || '',
+    cr: null, start: a.aired && a.aired.from ? String(a.aired.from).slice(0, 10) : '', genres: (a.genres || []).map(g => g.name), fmt: a.type === 'Movie' ? 'MOVIE' : 'TV',
+    year: a.year ? String(a.year) : (a.aired && a.aired.from ? String(a.aired.from).slice(0, 4) : '') };
+}
+async function jikanGet(path){
+  const r = await fetch(JIKAN + path);
+  if (r.status === 429){ await sleep(1500); return jikanGet(path); }
+  if (!r.ok) throw new Error('jikan ' + r.status);
+  return r.json();
+}
+async function fetchJikanSeason(so){
+  const items = [], seen = new Set();
+  for (let page = 1; page <= 4; page++){
+    const j = await jikanGet('/seasons/' + so.year + '/' + so.season.toLowerCase() + '?filter=tv&sfw=true&page=' + page);
+    (j.data || []).forEach(a => { if (!seen.has(a.mal_id)){ seen.add(a.mal_id); items.push(mapJikan(a)); } });
+    if (!j.pagination || !j.pagination.has_next_page) break;
+    await sleep(450);
+  }
+  items.forEach(x => x.id = 'mal' + x.mal);
+  return items;
+}
 function ensureAnime(so, force){
   const key = so.season + so.year, e = cache.anime[key];
-  if (ui.busy.anime || coolingDown('anime', force) || (!force && e && e.v === 2 && Date.now() - e.at < 6 * HOUR)) return;
+  if (ui.busy.anime || coolingDown('anime', force) || (!force && e && e.v === 2 && Date.now() - e.at < (e.src === 'mal' ? 30 * 60000 : 6 * HOUR))) return;
   ui.busy.anime = true; ui.msg.anime = '';
   (async () => {
     try { cache.anime[key] = { v: 2, at: Date.now(), items: await fetchAnimeSeason(so, key === CUR.season + CUR.year) }; saveCache(); }
-    catch(err){ ui.failAt.anime = Date.now(); ui.msg.anime = anilistReason(err) + (e ? ' Showing the list from ' + ago(e.at) + '.' : ''); }
+    catch(err){
+      try {
+        if (e && e.src !== 'mal') throw err;   // keep a saved AniList list over the backup
+        cache.anime[key] = { v: 2, src: 'mal', at: Date.now(), items: await fetchJikanSeason(so) }; saveCache();
+      } catch(err2){ ui.failAt.anime = Date.now(); ui.msg.anime = anilistReason(err) + (e ? ' Showing the list from ' + ago(e.at) + '.' : ''); }
+    }
     finally { ui.busy.anime = false; if (ui.tab === 'season') render(); }
   })();
 }
@@ -493,7 +535,7 @@ async function refreshShows(force){
   if (ui.busy.shows) return;
   const pending = state.shows.some(x => !x.noLink && !x.live);
   if (!force && !pending && Date.now() - (cache.showsAt || 0) < 30 * 60000) return;
-  ui.busy.shows = true; ui.msg.shows = '';
+  ui.busy.shows = true; ui.msg.shows = ''; ui.showsReason = '';
   let failed = false;
   try {
     const anime = state.shows.filter(s => typeOf(s) === 'anime' && !s.noLink);
@@ -522,12 +564,12 @@ async function refreshShows(force){
         if (!s.linkTitle) s.linkTitle = m.title.english || m.title.romaji;
       });
     }
-  } catch(err){ failed = true; }
+  } catch(err){ failed = true; ui.showsReason = anilistReason(err); }
   for (const s of state.shows.filter(x => typeOf(x) === 'tv' && !x.noLink)){
     try { const show = await tvShowData(s); if (show) applyTV(s, show); else s.noLink = true; }
     catch(err){ failed = true; }
   }
-  if (failed) ui.msg.shows = 'Couldn’t update some episode info. It will try again next time you open the app.';
+  if (failed) ui.msg.shows = ui.showsReason && !/connection/.test(ui.showsReason) ? ui.showsReason.replace('Airday will', 'Air times and episode counts may be out of date until then. Airday will') : 'Couldn’t update some episode info. It will try again next time you open the app.';
   else { cache.showsAt = Date.now(); saveCache(); }
   save(true);
   ui.busy.shows = false;
@@ -1096,7 +1138,12 @@ async function friendAction(act){
 const finder = { type: 'anime', ctx: 'library', q: '', results: [], token: 0, timer: null };
 async function findTitles(type, q){
   if (type === 'anime'){
-    const d = await anilist('query($q:String){Page(perPage:15){media(search:$q,type:ANIME,isAdult:false,sort:SEARCH_MATCH){id title{english romaji} episodes status format startDate{year} coverImage{medium} genres nextAiringEpisode{airingAt episode}}}}', { q });
+    let d;
+    try { d = await anilist('query($q:String){Page(perPage:15){media(search:$q,type:ANIME,isAdult:false,sort:SEARCH_MATCH){id title{english romaji} episodes status format startDate{year} coverImage{medium} genres nextAiringEpisode{airingAt episode}}}}', { q }); }
+    catch(err){
+      const j = await jikanGet('/anime?sfw=true&limit=15&q=' + encodeURIComponent(q));
+      return (j.data || []).map(a => { const x = mapJikan(a); return { type:'anime', id:null, mal:x.mal, t:x.t, year:x.year, eps:x.eps, status:x.status, fmt:x.fmt, cover:x.thumb || x.cover, genres:x.genres, next:null }; });
+    }
     return (d.Page.media || []).map(m => ({ type:'anime', id:m.id, t:(m.title.english || m.title.romaji || '').trim(), year: m.startDate && m.startDate.year ? String(m.startDate.year) : '',
       eps:m.episodes || null, status:m.status, fmt:m.format, cover: m.coverImage ? m.coverImage.medium : '', genres:m.genres || [], next:m.nextAiringEpisode }));
   }
@@ -1114,8 +1161,8 @@ async function findTitles(type, q){
   return (j.results || (j.result ? [j.result] : [])).slice(0, 15).map(m => ({ type:'movie', id:m.id, t:m.title, year:(m.date || '').slice(0,4), date:m.date || '',
     cover: m.poster ? 'https://image.tmdb.org/t/p/w185' + m.poster : '' }));
 }
-function inLibrary(x){ return state.library.some(y => typeOf(y) === x.type && ((x.type === 'anime' && y.anilistId === x.id) || (x.type === 'tv' && y.tvmazeId === x.id) || (x.type === 'movie' && y.tmdbId === x.id) || norm(y.title) === norm(x.t))); }
-function onWeek(x){ return state.shows.some(s => (x.type === 'anime' && s.anilistId === x.id) || (x.type === 'tv' && s.tvmazeId === x.id) || norm(s.title) === norm(x.t)); }
+function inLibrary(x){ return state.library.some(y => typeOf(y) === x.type && ((x.type === 'anime' && x.id && y.anilistId === x.id) || (x.type === 'tv' && y.tvmazeId === x.id) || (x.type === 'movie' && y.tmdbId === x.id) || norm(y.title) === norm(x.t))); }
+function onWeek(x){ return state.shows.some(s => (x.type === 'anime' && x.id && s.anilistId === x.id) || (x.type === 'tv' && s.tvmazeId === x.id) || norm(s.title) === norm(x.t)); }
 function onList(x){ return state.watchlist.some(m => norm(m.title) === norm(x.t)); }
 function renderFind(){
   if (!finder.results.length) return '<p class="meta" style="margin:4px 2px">No matches. Try a shorter or different title.</p>';
@@ -1353,17 +1400,18 @@ function animeView(seg){
   ensureAnime(so);
   const entry = cache.anime[key];
   let src = entry ? entry.items : [];
-  if (ui.crOnly) src = src.filter(x => x.cr);
+  if (ui.crOnly) src = src.filter(x => x.cr !== false);
   if (!isCur && ui.sFilter === 'cont') ui.sFilter = 'all';
   let items = src.filter(x => ui.sFilter === 'all' || (ui.sFilter === 'new' ? x.k === 'New' : ui.sFilter === 'ret' ? x.k === 'Returning' : x.k === 'Continuing'));
   if (ui.sQ) items = items.filter(x => norm(x.t + ' ' + x.alt).includes(norm(ui.sQ)));
   const n = k => src.filter(x => x.k === k).length;
-  let h = '<div class="top"><div><div class="sub">Live from AniList</div><h1>' + esc(seasonLabel(so)) + '</h1></div></div>' + seg;
+  let h = '<div class="top"><div><div class="sub">' + (entry && entry.src === 'mal' ? 'From MyAnimeList (backup)' : 'Live from AniList') + '</div><h1>' + esc(seasonLabel(so)) + '</h1></div></div>' + seg;
   h += '<div class="chips">' + chip('sseason','cur',seasonLabel(CUR),ui.sSeason) + chip('sseason','next',seasonLabel(NEXT),ui.sSeason) +
     '<button class="chipb' + (ui.crOnly?' on':'') + '" aria-pressed="' + ui.crOnly + '" data-cronly="1">Crunchyroll only</button></div>';
   h += '<div class="chips">' + chip('sfilter','all','All ' + src.length, ui.sFilter) + chip('sfilter','new','New ' + n('New'), ui.sFilter) +
     chip('sfilter','ret','Returning ' + n('Returning'), ui.sFilter) + (isCur ? chip('sfilter','cont','Continuing ' + n('Continuing'), ui.sFilter) : '') + '</div>';
   h += syncLine('anime', entry);
+  if (entry && entry.src === 'mal') h += '<p class="sync">AniList isn’t responding, so this list comes from MyAnimeList for now. The Crunchyroll filter can’t be applied to it. Airday switches back on its own.</p>';
   h += searchBox('Search ' + seasonLabel(so));
   if (!entry && !ui.busy.anime) return h + '<div class="empty">The lineup couldn’t load yet.</div>';
   if (!entry && ui.busy.anime) return h + '<div class="empty">Loading the ' + esc(seasonLabel(so)) + ' lineup…</div>';
@@ -1747,7 +1795,7 @@ document.addEventListener('click', e => {
     const so = ui.sSeason === 'next' ? NEXT : CUR, entry = cache.anime[so.season + so.year];
     const x = entry && entry.items.find(y => String(y.id) === d.anime); if (!x) return;
     const at = x.at ? new Date(x.at) : null;
-    const s = { id: uid(), type:'anime', title: x.t, anilistId: x.id, linkTitle: x.t, cover: x.thumb || x.cover, day: at ? at.getDay() : dayFromDate(x.start),
+    const s = { id: uid(), type:'anime', title: x.t, anilistId: x.mal ? null : x.id, linkTitle: x.t, cover: x.thumb || x.cover, day: at ? at.getDay() : dayFromDate(x.start),
       time: at ? hm(at) : '', ep:0, total:null, premiere: x.start, isNew: x.k === 'New', fav:false, epOffset:0, genres: x.genres || [],
       live: { total: x.eps, aired: x.next ? x.next - 1 : (x.status === 'FINISHED' ? x.eps : 0), at: x.at, status: x.status } };
     showSheet(s, true);
