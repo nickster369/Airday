@@ -327,11 +327,38 @@ const ui = { tab:'week', day:new Date().getDay(), sType:'anime', sSeason:'cur', 
 function coolingDown(kind, force){ return !force && ui.failAt[kind] && Date.now() - ui.failAt[kind] < 2 * 60000; }
 
 /* ---------- AniList (anime) ---------- */
-async function anilist(query, variables){
-  const r = await fetch('https://graphql.anilist.co', { method:'POST', headers:{ 'Content-Type':'application/json', 'Accept':'application/json' }, body: JSON.stringify({ query, variables: variables || {} }) });
+async function anilistPost(url, body){
+  const r = await fetch(url, { method:'POST', headers:{ 'Content-Type':'application/json', 'Accept':'application/json' }, body });
   const j = await r.json().catch(() => null);
-  if (!j || !j.data) throw new Error('AniList ' + r.status);
-  return j.data;
+  if (j && j.data) return { data: j.data, stale: r.headers.get('X-Airday-Stale') === '1' };
+  const e = new Error('AniList ' + r.status);
+  e.status = r.status; e.detail = (j && j.errors && j.errors[0] && j.errors[0].message) || '';
+  e.retryAfter = Number(r.headers.get('Retry-After')) || 0;
+  throw e;
+}
+async function anilistFull(query, variables){
+  const body = JSON.stringify({ query, variables: variables || {} });
+  let lastErr = null;
+  if (relayOn()){
+    try { return await anilistPost(MOVIES_RELAY + '/anilist', body); } catch(e){ lastErr = e; }
+  }
+  try { return await anilistPost('https://graphql.anilist.co', body); }
+  catch(e){
+    if (e.status === 429){
+      await sleep(Math.min((e.retryAfter || 3) * 1000, 6000));
+      try { return await anilistPost('https://graphql.anilist.co', body); } catch(e2){ throw e2; }
+    }
+    throw (lastErr && lastErr.status === 403) ? lastErr : e;
+  }
+}
+async function anilist(query, variables){ return (await anilistFull(query, variables)).data; }
+function anilistReason(err){
+  const d = String((err && err.detail) || '').toLowerCase();
+  if (err && err.status === 403 && /disabled|stability|maintenance/.test(d)) return 'AniList has switched off its service for now, on their end. Airday will keep trying.';
+  if (err && err.status === 429) return 'AniList is busy right now. Airday will try again in a couple of minutes.';
+  if (err && err.status >= 500) return 'AniList is having problems on their end. Airday will try again in a couple of minutes.';
+  if (err && err.status === 403) return 'AniList is refusing requests right now. Airday will try again in a couple of minutes.';
+  return 'Couldn’t reach AniList. Check your connection and try again.';
 }
 const A_FIELDS = 'id title{romaji english} episodes status startDate{year month day} nextAiringEpisode{airingAt episode} coverImage{medium large} externalLinks{site} genres';
 const SEQUEL_RE = /(season\s*\d|\b\d+(st|nd|rd|th)\s+season|\bpart\s*\d|\bcour\s*\d|\b(ii|iii|iv)\b|\b2nd\b|\b3rd\b)/i;
@@ -359,7 +386,7 @@ function ensureAnime(so, force){
   ui.busy.anime = true; ui.msg.anime = '';
   (async () => {
     try { cache.anime[key] = { v: 2, at: Date.now(), items: await fetchAnimeSeason(so, key === CUR.season + CUR.year) }; saveCache(); }
-    catch(err){ ui.failAt.anime = Date.now(); ui.msg.anime = 'Couldn’t reach AniList. ' + (e ? 'Showing the list from ' + ago(e.at) + '.' : 'Check your connection and try again.'); }
+    catch(err){ ui.failAt.anime = Date.now(); ui.msg.anime = anilistReason(err) + (e ? ' Showing the list from ' + ago(e.at) + '.' : ''); }
     finally { ui.busy.anime = false; if (ui.tab === 'season') render(); }
   })();
 }
